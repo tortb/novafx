@@ -1,6 +1,7 @@
 package com.novafx.ui.view;
 
 import com.novafx.function.Parameter;
+import com.novafx.ui.components.FXPanel;
 import com.novafx.ui.i18n.I18n;
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
@@ -17,7 +18,7 @@ import java.util.function.BiConsumer;
  * 当表达式包含自定义参数（如 {@code a*sin(t)} 中的 {@code a}）时，
  * 自动生成滑块。拖动滑块实时重新采样。
  */
-public final class ParameterPanel extends VBox {
+public final class ParameterPanel extends FXPanel {
 
     private final List<ParameterSlider> sliders = new ArrayList<>();
     private BiConsumer<String, Double> onParameterChanged;

@@ -10,6 +10,7 @@ import com.novafx.renderer.Camera;
 import com.novafx.project.io.NfxcReader;
 import com.novafx.project.model.CompiledPointCloud;
 import com.novafx.ui.command.UpdateFunctionCommand;
+import com.novafx.ui.components.DockPane;
 import com.novafx.ui.controller.MainController;
 import com.novafx.ui.i18n.I18n;
 import com.novafx.ui.view.dialog.NewProjectDialog;
@@ -153,20 +154,20 @@ public final class MainWindow {
     // 布局
     // ---------------------------------------------------------------
 
-    private BorderPane buildLayout() {
-        BorderPane root = new BorderPane();
+    private DockPane buildLayout() {
+        DockPane root = new DockPane();
 
         root.setTop(topBar);
-        root.setLeft(projectExplorer);
+        root.setDockLeft(projectExplorer);
 
         SplitPane splitPane = new SplitPane();
         splitPane.setOrientation(Orientation.VERTICAL);
         splitPane.setStyle("-fx-background-color: #0A0A0A;");
         splitPane.getItems().addAll(canvasViewport, expressionPanel);
         splitPane.setDividerPositions(0.70);
-        root.setCenter(splitPane);
+        root.setDockCenter(splitPane);
 
-        root.setRight(rightPanel);
+        root.setDockRight(rightPanel);
 
         // 底部状态栏
         HBox statusBar = new HBox(8);
@@ -177,7 +178,7 @@ public final class MainWindow {
         statusBar.setPadding(new javafx.geometry.Insets(2, 8, 2, 8));
         statusLabel.setStyle("-fx-text-fill: #555; -fx-font-size: 10;");
         statusBar.getChildren().add(statusLabel);
-        root.setBottom(statusBar);
+        root.setDockBottom(statusBar);
 
         return root;
     }

@@ -1,5 +1,6 @@
 package com.novafx.ui.view;
 
+import com.novafx.ui.components.FXPanel;
 import com.novafx.ui.i18n.I18n;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
@@ -41,10 +42,10 @@ public final class PropertyPanel extends TabPane {
     }
 
     private VBox tabContent() {
-        VBox vbox = new VBox(8);
-        vbox.setPadding(new Insets(12, 10, 12, 10));
-        vbox.setStyle("-fx-background-color: #0D0D0D;");
-        return vbox;
+        FXPanel panel = new FXPanel() {};
+        panel.setPadding(new Insets(12, 10, 12, 10));
+        panel.setSpacing(8);
+        return panel;
     }
 
     // ── 粒子 ──

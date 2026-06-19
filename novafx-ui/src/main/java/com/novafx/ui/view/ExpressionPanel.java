@@ -4,6 +4,7 @@ import com.novafx.function.CompiledFunction;
 import com.novafx.function.CompletionEngine;
 import com.novafx.function.CompletionItem;
 import com.novafx.math.FunctionDefinition;
+import com.novafx.ui.components.FXInput;
 import com.novafx.ui.editor.MathKeyboard;
 import com.novafx.ui.i18n.I18n;
 import javafx.application.Platform;
@@ -401,7 +402,8 @@ public final class ExpressionPanel extends VBox {
     // ── Utilities ──
 
     private static TextField createField(String defaultValue) {
-        TextField field = new TextField(defaultValue);
+        TextField field = new FXInput();
+        field.setText(defaultValue);
         field.getStyleClass().add("expression-field");
         return field;
     }

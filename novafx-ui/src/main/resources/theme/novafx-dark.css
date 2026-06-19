@@ -507,3 +507,183 @@
     -fx-font-size: 11px;
     -fx-padding: 2 0 0 48px;
 }
+
+/* ═══════════════════════════════════════════════
+   UI Kit v1 组件样式
+   ═══════════════════════════════════════════════ */
+
+/* ── FXPanel 面板基类 ────────────────────── */
+.fx-panel {
+    -fx-background-color: #111111;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-border-color: #2A2A2A;
+    -fx-padding: 12;
+}
+
+/* ── Card 卡片组件 ──────────────────────── */
+.fx-card {
+    -fx-background-color: #151515;
+    -fx-background-radius: 10;
+    -fx-padding: 10;
+}
+
+/* ── FXButton 按钮组件 ──────────────────── */
+.fx-button {
+    -fx-background-color: #A855F7;
+    -fx-text-fill: white;
+    -fx-background-radius: 10;
+    -fx-cursor: hand;
+}
+
+.fx-button:hover {
+    -fx-background-color: #9333EA;
+}
+
+.fx-button:pressed {
+    -fx-background-color: #7E22CE;
+}
+
+/* ── FXInput 输入框组件 ─────────────────── */
+.fx-input {
+    -fx-background-color: #1A1A1A;
+    -fx-text-fill: white;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-border-color: #2A2A2A;
+    -fx-padding: 8 12;
+    -fx-font-size: 13px;
+}
+
+.fx-input:focused {
+    -fx-border-color: #A855F7;
+    -fx-border-width: 1.5;
+}
+
+/* ── DockPane 布局系统 ──────────────────── */
+.dock-pane {
+    -fx-background-color: #0A0A0A;
+}
+
+/* ── CollapsiblePanel 可折叠面板 ────────── */
+.collapsible-panel {
+    -fx-background-color: #111111;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-border-color: #2A2A2A;
+}
+
+/* ═══════════════════════════════════════════════
+   UI Kit v2 组件样式
+   ═══════════════════════════════════════════════ */
+
+/* ── DraggableDockPane 可拖拽布局 ──────── */
+.draggable-dock-pane {
+    -fx-background-color: #0A0A0A;
+}
+
+/* ── DockDropZone 停靠区域指示器 ────────── */
+.dock-drop-zone {
+    -fx-background-color: transparent;
+}
+
+/* ── FloatingPanel 浮动面板 ────────────── */
+.floating-panel {
+    -fx-background-color: #111111;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-border-color: #2A2A2A;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 10, 0, 0, 3);
+}
+
+.floating-panel:hover {
+    -fx-border-color: #A855F7;
+}
+
+/* ── TabbedPanel Tab 面板 ──────────────── */
+.tabbed-panel {
+    -fx-background-color: #111111;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-border-color: #2A2A2A;
+}
+
+.tab-header-container {
+    -fx-background-color: #0D0D0D;
+    -fx-border-color: #1A1A1A;
+    -fx-border-width: 0 0 1 0;
+}
+
+.tab-header {
+    -fx-background-color: #111111;
+    -fx-border-color: #1A1A1A;
+    -fx-border-width: 0 1 0 0;
+    -fx-padding: 6 12;
+    -fx-cursor: hand;
+}
+
+.tab-header:hover {
+    -fx-background-color: #1A1A1A;
+}
+
+.tab-header-active {
+    -fx-background-color: #0A0A0A;
+    -fx-border-color: #A855F7 #1A1A1A #0A0A0A #1A1A1A;
+    -fx-border-width: 2 1 0 1;
+}
+
+.tab-title {
+    -fx-text-fill: #CCCCCC;
+    -fx-font-size: 12;
+}
+
+.tab-header-active .tab-title {
+    -fx-text-fill: #FFFFFF;
+    -fx-font-weight: bold;
+}
+
+.tab-close-button {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-text-fill: #888;
+    -fx-font-size: 14;
+    -fx-padding: 0 4;
+    -fx-min-width: 20;
+    -fx-min-height: 20;
+    -fx-cursor: hand;
+}
+
+.tab-close-button:hover {
+    -fx-background-color: #EF4444;
+    -fx-text-fill: white;
+}
+
+.tab-content-container {
+    -fx-background-color: #0A0A0A;
+}
+
+/* ── DetachablePanel 可分离面板 ────────── */
+.detachable-panel {
+    -fx-background-color: #111111;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-border-color: #2A2A2A;
+}
+
+.detachable-panel.detached {
+    -fx-border-color: #A855F7;
+    -fx-border-width: 2;
+}
+
+/* ── Workspace 工作区 ──────────────────── */
+.workspace {
+    -fx-background-color: #111111;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-border-color: #2A2A2A;
+}
+
+.workspace-active {
+    -fx-border-color: #A855F7;
+    -fx-border-width: 2;
+}

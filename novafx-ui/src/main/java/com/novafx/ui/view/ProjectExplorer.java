@@ -4,6 +4,7 @@ import com.novafx.core.workspace.ProjectNode;
 import com.novafx.core.workspace.ProjectNodeType;
 import com.novafx.core.workspace.ProjectTreeModel;
 import com.novafx.core.workspace.Workspace;
+import com.novafx.ui.components.CollapsiblePanel;
 import com.novafx.ui.i18n.I18n;
 import javafx.collections.ListChangeListener;
 import javafx.scene.control.*;
@@ -49,7 +50,7 @@ import java.util.function.Consumer;
  * └─────────────────────────────┘
  * </pre>
  */
-public final class ProjectExplorer extends VBox {
+public final class ProjectExplorer extends CollapsiblePanel {
 
     private static final Map<ProjectNodeType, String> ICONS = Map.of(
             ProjectNodeType.PROJECT,        "📁",

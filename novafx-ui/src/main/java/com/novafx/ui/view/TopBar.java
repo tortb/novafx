@@ -1,5 +1,6 @@
 package com.novafx.ui.view;
 
+import com.novafx.ui.components.FXButton;
 import com.novafx.ui.i18n.I18n;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -144,9 +145,8 @@ public final class TopBar extends HBox {
     // ── Style helpers ──
 
     private static Button createTopButton(String tooltip, String text) {
-        Button btn = new Button(text);
+        Button btn = new FXButton(text);
         btn.getStyleClass().add("top-bar-button");
-        btn.setStyle(topButtonStyle());
         return btn;
     }
 
