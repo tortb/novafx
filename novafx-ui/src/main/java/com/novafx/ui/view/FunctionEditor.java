@@ -95,6 +95,20 @@ public final class FunctionEditor extends VBox {
         latexEditor.clearError();
     }
 
+    /**
+     * 聚焦指定轴的表达式输入框。
+     * 如果当前模式不是专业模式，自动切换为专业模式。
+     *
+     * @param axis 'x', 'y', 或 'z'
+     */
+    public void focusExpression(char axis) {
+        // 切换到专业模式以获得更好的表达式编辑体验
+        if (modeSwitcher.getCurrentMode() != ParserHub.InputMode.EXPRESSION) {
+            modeSwitcher.setMode(ParserHub.InputMode.EXPRESSION);
+        }
+        expressionEditor.focusExpression(axis);
+    }
+
     private void switchEditor(ParserHub.InputMode mode) {
         getChildren().remove(activeContainer);
 

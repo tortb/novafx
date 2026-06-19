@@ -128,6 +128,24 @@ public final class ExpressionEditor extends VBox {
         errorText.setVisible(false);
     }
 
+    /**
+     * 聚焦并框选指定轴的表达式输入框。
+     *
+     * @param axis 'x', 'y', 或 'z'
+     */
+    public void focusExpression(char axis) {
+        TextField field = switch (axis) {
+            case 'x' -> xField;
+            case 'y' -> yField;
+            case 'z' -> zField;
+            default -> null;
+        };
+        if (field != null) {
+            field.requestFocus();
+            field.selectAll();
+        }
+    }
+
     // ---------------------------------------------------------------
     // 布局
     // ---------------------------------------------------------------

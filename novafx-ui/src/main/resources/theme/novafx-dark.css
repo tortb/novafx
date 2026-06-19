@@ -303,3 +303,78 @@
 .toggle-button:selected:hover {
     -fx-background-color: #EA580C;
 }
+
+/* ═══════════════════════════════════════════════
+   Project Explorer Tree
+   配色:  BG 透明  行高 32px  字体 14px
+          hover #1A1A1A  选中 #F97316
+   参考 VSCode Explorer / JetBrains Project 面板
+   ═══════════════════════════════════════════════ */
+
+#project-tree {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-padding: 0;
+}
+
+#project-tree .tree-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #CCCCCC;
+    -fx-font-size: 14px;
+    -fx-min-height: 32px;
+    -fx-pref-height: 32px;
+    -fx-padding: 0 0 0 4px;
+}
+
+#project-tree .tree-cell:filled:hover {
+    -fx-background-color: #1A1A1A;
+}
+
+#project-tree .tree-cell:filled:selected {
+    -fx-background-color: #1A1A1A;
+    -fx-border-color: transparent transparent transparent #F97316;
+    -fx-border-width: 0 0 0 2;
+}
+
+#project-tree .tree-cell:filled:selected .label {
+    -fx-text-fill: #FFFFFF;
+}
+
+#project-tree .tree-cell > .tree-disclosure-node {
+    -fx-padding: 6px 4px 6px 8px;
+}
+
+#project-tree .tree-cell > .tree-disclosure-node > .arrow {
+    -fx-background-color: #666666;
+    -fx-scale-x: 0.75;
+    -fx-scale-y: 0.75;
+}
+
+#project-tree .tree-cell:filled:hover > .tree-disclosure-node > .arrow {
+    -fx-background-color: #F97316;
+}
+
+/* Make the cell expand to full width */
+#project-tree .tree-cell .label {
+    -fx-padding: 0 4px;
+}
+
+#project-tree .scroll-bar {
+    -fx-background-color: transparent;
+    -fx-pref-width: 8;
+}
+
+#project-tree .scroll-bar .thumb {
+    -fx-background-color: #333333;
+    -fx-background-radius: 4;
+}
+
+#project-tree .scroll-bar .thumb:hover {
+    -fx-background-color: #444444;
+}
+
+#project-tree .scroll-bar .increment-button,
+#project-tree .scroll-bar .decrement-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}

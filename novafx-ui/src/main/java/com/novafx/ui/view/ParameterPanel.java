@@ -98,6 +98,22 @@ public final class ParameterPanel extends VBox {
         }
     }
 
+    /**
+     * Highlights and scrolls to the slider for a specific parameter by name.
+     * Does nothing if no matching parameter is found.
+     *
+     * @param paramName the parameter name to highlight
+     */
+    public void highlightParameter(String paramName) {
+        for (ParameterSlider ps : sliders) {
+            if (ps.name.equals(paramName)) {
+                ps.requestFocus();
+                ps.setStyle("-fx-background-color: #1A1A1A; -fx-background-radius: 4;");
+                break;
+            }
+        }
+    }
+
     private static String formatValue(double value) {
         if (value == Math.floor(value) && !Double.isInfinite(value)) {
             return String.valueOf((long) value);

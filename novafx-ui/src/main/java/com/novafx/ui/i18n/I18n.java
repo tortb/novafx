@@ -6,7 +6,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Path;
+import java.text.MessageFormat;
 import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.PropertyResourceBundle;
@@ -40,6 +40,24 @@ public final class I18n {
     public static String get(String key) {
         try {
             return bundle.getString(key);
+        } catch (MissingResourceException e) {
+            log.warn("Missing i18n key: {}", key);
+            return key;
+        }
+    }
+
+    /**
+     * Returns a formatted localized string (supports {@link MessageFormat}
+     * placeholders like {@code {0}}, {@code {1}}).
+     *
+     * @param key  the message key
+     * @param args arguments for formatting
+     * @return the formatted localized string, or the key itself if not found
+     */
+    public static String format(String key, Object... args) {
+        try {
+            String pattern = bundle.getString(key);
+            return MessageFormat.format(pattern, args);
         } catch (MissingResourceException e) {
             log.warn("Missing i18n key: {}", key);
             return key;

@@ -47,15 +47,26 @@ public final class ProjectRepositoryImpl implements ProjectRepository {
         var fileProject = reader.read(path);
         FunctionDefinition function = fileProject.function();
 
+        // Use the persisted UUID from the .nfx file; fall back to random
+        UUID id;
+        try {
+            id = (fileProject.id() != null && !fileProject.id().isBlank())
+                    ? UUID.fromString(fileProject.id())
+                    : UUID.randomUUID();
+        } catch (IllegalArgumentException e) {
+            id = UUID.randomUUID();
+        }
+
         var domainProject = new Project(
-                UUID.randomUUID(),
+                id,
                 fileProject.meta().name(),
                 "", // description not stored in .nfx
                 function,
                 Instant.now(),
                 Instant.now()
         );
-        log.debug("Loaded project '{}' from {}", domainProject.name(), path);
+        log.debug("Loaded project '{}' (id={}) from {}",
+                domainProject.name(), id, path);
         return domainProject;
     }
 
@@ -63,6 +74,7 @@ public final class ProjectRepositoryImpl implements ProjectRepository {
     public void save(Project project, Path path) {
         var fileProject = new com.novafx.project.model.Project(
                 com.novafx.project.model.Project.CURRENT_VERSION,
+                project.id().toString(),
                 new Meta(project.name(), ""),
                 project.functionDefinition(),
                 com.novafx.project.model.ParticleSettings.defaults(),

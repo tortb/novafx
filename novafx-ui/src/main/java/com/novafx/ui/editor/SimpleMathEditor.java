@@ -165,6 +165,24 @@ public final class SimpleMathEditor extends VBox {
         errorText.setVisible(false);
     }
 
+    /**
+     * 聚焦并框选指定轴的表达式输入框。
+     *
+     * @param axis 'x', 'y', 或 'z'
+     */
+    public void focusExpression(char axis) {
+        TextField field = switch (axis) {
+            case 'x' -> xField;
+            case 'y' -> yField;
+            case 'z' -> zField;
+            default -> null;
+        };
+        if (field != null) {
+            field.requestFocus();
+            field.selectAll();
+        }
+    }
+
     private TextField getFocusedField() {
         for (var f : new TextField[]{xField, yField, zField}) {
             if (f.isFocused()) return f;

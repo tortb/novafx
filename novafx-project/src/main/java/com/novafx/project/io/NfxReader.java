@@ -56,6 +56,13 @@ public final class NfxReader implements ProjectReader {
                         "Unsupported version '" + version + "'; expected " + Project.CURRENT_VERSION);
             }
 
+            // ── [project] ──
+            String projectId = null;
+            var projectTable = result.getTable("project");
+            if (projectTable != null) {
+                projectId = projectTable.getString("id");
+            }
+
             // ── [meta] ──
             String name = "";
             String author = "";
@@ -104,6 +111,7 @@ public final class NfxReader implements ProjectReader {
 
             var project = new Project(
                     version,
+                    projectId,
                     new Meta(name, author),
                     function,
                     new ParticleSettings(pSize, density),

@@ -2,6 +2,9 @@ package com.novafx.ui.controller;
 
 import com.novafx.core.domain.PlatformService;
 import com.novafx.core.domain.Project;
+import com.novafx.core.state.ProjectState;
+import com.novafx.core.workspace.ProjectTreeModel;
+import com.novafx.core.workspace.Workspace;
 import com.novafx.export.CsvExporter;
 import com.novafx.export.Exporter;
 import com.novafx.export.JsonExporter;
@@ -27,11 +30,10 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Central controller connecting the UI components with the domain and
- * infrastructure layers.
+ * Central controller — single source of truth is {@link ProjectState}.
  * <p>
- * Handles user actions: preset selection, function editing, parameter
- * manipulation, rendering, project save/load/compile, and export.
+ * Every mutation creates a new state via copy-on-write, fires
+ * {@link #onStateChanged}, and all UI panels read from the one state.
  */
 public final class MainController {
 
@@ -41,230 +43,254 @@ public final class MainController {
     private final ProjectCompiler projectCompiler;
     private final PlatformService platformService;
 
-    private Project currentProject;
-    private Path currentProjectPath;
-    private List<Vector3d> currentPoints;
-    private Map<String, Parameter> currentParameters = new LinkedHashMap<>();
+    /** The one source of truth.  Null before any project is loaded. */
+    private ProjectState state;
 
-    private Runnable onPointsChanged;
-    private Runnable onParametersChanged;
-    private Runnable onProjectChanged;
+    private final Workspace workspace = new Workspace();
 
-    /**
-     * Constructs the main controller with default infrastructure.
-     */
+    /** Single callback fired after every state mutation. */
+    private Runnable onStateChanged;
+
+    /** True when the function changed since the last sample. */
+    private boolean needsResample;
+
     public MainController() {
         this.platformService = new DefaultPlatformService();
         this.projectRepository = new ProjectRepositoryImpl();
         this.projectCompiler = new ProjectCompiler();
     }
 
-    /**
-     * Registers a callback invoked when the point data changes.
-     */
-    public void setOnPointsChanged(Runnable callback) {
-        this.onPointsChanged = callback;
-    }
+    // ---------------------------------------------------------------
+    //  Listener
+    // ---------------------------------------------------------------
 
     /**
-     * Registers a callback invoked when the parameter set changes.
+     * Registers a single callback fired after <em>every</em> state
+     * mutation (replaces the old per-aspect callbacks).
      */
-    public void setOnParametersChanged(Runnable callback) {
-        this.onParametersChanged = callback;
+    public void setOnStateChanged(Runnable callback) {
+        this.onStateChanged = callback;
     }
 
-    /**
-     * Registers a callback invoked when the project itself changes
-     * (load, new, etc.) — useful for updating the window title.
-     */
-    public void setOnProjectChanged(Runnable callback) {
-        this.onProjectChanged = callback;
+    // ---------------------------------------------------------------
+    //  State accessors (backward-compat)
+    // ---------------------------------------------------------------
+
+    /** Returns the current state snapshot, or {@code null} if none. */
+    public ProjectState getState() {
+        return state;
     }
 
     /** Returns the current project, or null. */
     public Project getCurrentProject() {
-        return currentProject;
+        return state != null ? state.project() : null;
     }
 
     /** Returns the current project's file path, or null if unsaved. */
     public Path getCurrentProjectPath() {
-        return currentProjectPath;
+        return state != null ? state.projectPath() : null;
+    }
+
+    /** Returns the current FunctionDefinition, or null. */
+    public FunctionDefinition getCurrentDefinition() {
+        return state != null ? state.functionDefinition() : null;
+    }
+
+    /** Returns the current sampled points, or an empty list. */
+    public List<Vector3d> getCurrentPoints() {
+        return state != null ? state.points() : List.of();
+    }
+
+    /** Returns the current set of adjustable parameters. */
+    public List<Parameter> getParameters() {
+        return state != null
+                ? List.copyOf(state.parameters().values())
+                : List.of();
+    }
+
+    /** Returns the shared workspace (never null). */
+    public Workspace getWorkspace() {
+        return workspace;
     }
 
     // ---------------------------------------------------------------
-    // Presets
+    //  State mutation
     // ---------------------------------------------------------------
 
-    /** Returns the list of built-in preset names. */
+    /**
+     * Atomically replaces the state, re-samples if needed, and fires
+     * the listener once.
+     */
+    private void setState(ProjectState newState) {
+        this.state = newState;
+        if (needsResample) {
+            this.state = resample(newState);
+            needsResample = false;
+        }
+        if (onStateChanged != null) {
+            onStateChanged.run();
+        }
+    }
+
+    // ---------------------------------------------------------------
+    //  Presets
+    // ---------------------------------------------------------------
+
     public List<String> getPresetNames() {
         return MathPresets.names();
     }
 
     /**
-     * Applies a built-in preset by name.
-     *
-     * @param name the preset name
-     * @return the applied FunctionDefinition
+     * Applies a built-in preset by name, adds it to the workspace,
+     * and sets it as the active project.
      */
     public FunctionDefinition applyPreset(String name) {
         FunctionDefinition def = MathPresets.byName(name);
         if (def == null) {
             throw new IllegalArgumentException("Unknown preset: " + name);
         }
-        currentProject = new Project(
-                UUID.randomUUID(),
-                name,
-                "Created from preset: " + name,
-                def,
-                Instant.now(),
-                Instant.now()
+        var project = new Project(
+                UUID.randomUUID(), name,
+                "Created from preset: " + name, def,
+                Instant.now(), Instant.now()
         );
-        currentProjectPath = null;
-        refreshParameters();
-        resample();
-        fireProjectChanged();
+        var params = new LinkedHashMap<String, Parameter>();
+        for (String pn : def.parameterNames()) {
+            params.put(pn, new Parameter(pn, 1.0));
+        }
+        var newState = new ProjectState(project, null, List.of(), params);
+        needsResample = true;
+        setState(newState);
+        addCurrentToWorkspace();
         return def;
     }
 
     // ---------------------------------------------------------------
-    // Function editing
+    //  Function editing
     // ---------------------------------------------------------------
 
-    /**
-     * Updates the current function definition and re-samples.
-     */
     public void updateFunction(String xExpr, String yExpr, String zExpr,
                                double start, double end, double step) {
-        FunctionDefinition def = new FunctionDefinition(xExpr, yExpr, zExpr, start, end, step);
-        if (currentProject != null) {
-            currentProject = new Project(
-                    currentProject.id(),
-                    currentProject.name(),
-                    currentProject.description(),
-                    def,
-                    currentProject.createdAt(),
-                    Instant.now()
-            );
-        } else {
-            currentProject = new Project(
-                    UUID.randomUUID(), "Untitled", "",
-                    def, Instant.now(), Instant.now()
-            );
-        }
-        refreshParameters();
-        resample();
-    }
-
-    /** Returns the current FunctionDefinition, or null. */
-    public FunctionDefinition getCurrentDefinition() {
-        return currentProject != null ? currentProject.functionDefinition() : null;
-    }
-
-    /** Returns the current sampled points, or an empty list. */
-    public List<Vector3d> getCurrentPoints() {
-        return currentPoints != null ? currentPoints : List.of();
-    }
-
-    /**
-     * Saves the current function as a named preset.
-     */
-    public void saveCurrentAsPreset(String name) {
-        if (currentProject == null) return;
-        // For now, presets are managed in-memory via MathPresets.
-        // The old JSON workspace repository has been removed.
-        log.info("Preset '{}' would be saved (feature coming)", name);
-    }
-
-    // ---------------------------------------------------------------
-    // Parameters
-    // ---------------------------------------------------------------
-
-    /** Returns the current set of adjustable parameters. */
-    public List<Parameter> getParameters() {
-        return List.copyOf(currentParameters.values());
-    }
-
-    /**
-     * Updates a single parameter value and re-samples.
-     */
-    public void setParameter(String name, double value) {
-        Parameter existing = currentParameters.get(name);
-        if (existing != null) {
-            currentParameters.put(name, existing.withValue(value));
-            resample();
-        }
-    }
-
-    // ---------------------------------------------------------------
-    // Project persistence
-    // ---------------------------------------------------------------
-
-    /** Creates a new empty project. */
-    public void newProject() {
-        FunctionDefinition def = new FunctionDefinition("t", "t", "0", 0, 10, 0.5);
-        this.currentProject = new Project(
-                UUID.randomUUID(), "Untitled", "",
-                def, Instant.now(), Instant.now()
+        if (state == null) return;
+        var def = new FunctionDefinition(xExpr, yExpr, zExpr, start, end, step);
+        var project = new Project(
+                state.project().id(), state.project().name(),
+                state.project().description(), def,
+                state.project().createdAt(), Instant.now()
         );
-        this.currentProjectPath = null;
-        refreshParameters();
-        resample();
-        fireProjectChanged();
+        var params = new LinkedHashMap<String, Parameter>();
+        for (String pn : def.parameterNames()) {
+            params.put(pn, new Parameter(pn, 1.0));
+        }
+        needsResample = true;
+        setState(state.withProject(project).withParameters(params));
+    }
+
+    // ---------------------------------------------------------------
+    //  Parameters
+    // ---------------------------------------------------------------
+
+    public void setParameter(String name, double value) {
+        if (state == null) return;
+        var old = state.parameters();
+        if (!old.containsKey(name)) return;
+        var updated = new LinkedHashMap<>(old);
+        updated.put(name, old.get(name).withValue(value));
+        needsResample = true;
+        setState(state.withParameters(updated));
     }
 
     /**
-     * Loads a project from a .nfx file path.
-     *
-     * @param path the path to the .nfx file
+     * Removes a parameter by substituting its current value into all
+     * three expressions.
      */
+    public void removeParameter(String paramName) {
+        if (state == null) return;
+        var param = state.parameters().get(paramName);
+        if (param == null) return;
+        var def = state.functionDefinition();
+        String val = formatParamValue(param.value());
+        updateFunction(
+                def.xExpression().replace(paramName, val),
+                def.yExpression().replace(paramName, val),
+                def.zExpression().replace(paramName, val),
+                def.start(), def.end(), def.step()
+        );
+    }
+
+    // ---------------------------------------------------------------
+    //  Project persistence
+    // ---------------------------------------------------------------
+
+    public void newProject() {
+        var def = new FunctionDefinition("t", "t", "0", 0, 10, 0.5);
+        var project = new Project(
+                UUID.randomUUID(), "Untitled", "", def,
+                Instant.now(), Instant.now()
+        );
+        var params = new LinkedHashMap<String, Parameter>();
+        for (String pn : def.parameterNames()) {
+            params.put(pn, new Parameter(pn, 1.0));
+        }
+        var newState = new ProjectState(project, null, List.of(), params);
+        needsResample = true;
+        setState(newState);
+        addCurrentToWorkspace();
+    }
+
     public void loadProject(Path path) {
-        Project loaded = projectRepository.load(path);
-        this.currentProject = loaded;
-        this.currentProjectPath = path;
-        refreshParameters();
-        resample();
-        fireProjectChanged();
+        var project = projectRepository.load(path);
+        var def = project.functionDefinition();
+        var params = new LinkedHashMap<String, Parameter>();
+        for (String pn : def.parameterNames()) {
+            params.put(pn, new Parameter(pn, 1.0));
+        }
+        var newState = new ProjectState(project, path, List.of(), params);
+        needsResample = true;
+        setState(newState);
+        addCurrentToWorkspace();
         log.info("Loaded project from {}", path);
     }
 
-    /**
-     * Saves the current project to its current path.
-     *
-     * @return true if saved, false if no path is set (caller should prompt for Save As)
-     */
     public boolean saveProject() {
-        if (currentProject == null) return false;
-        if (currentProjectPath == null) return false;
-        projectRepository.save(currentProject, currentProjectPath);
-        log.info("Saved project to {}", currentProjectPath);
+        if (state == null || state.projectPath() == null) return false;
+        projectRepository.save(state.project(), state.projectPath());
+        log.info("Saved project to {}", state.projectPath());
         return true;
     }
 
-    /**
-     * Saves the current project to a specified path.
-     *
-     * @param path the target .nfx path
-     */
+    public void saveProject(Project project, Path path) {
+        if (project == null || path == null) return;
+        projectRepository.save(project, path);
+        log.info("Saved project '{}' to {}", project.name(), path);
+    }
+
     public void saveProjectAs(Path path) {
-        if (currentProject == null) return;
-        this.currentProjectPath = path;
-        projectRepository.save(currentProject, path);
-        fireProjectChanged();
+        if (state == null) return;
+        projectRepository.save(state.project(), path);
+        setState(state.withPath(path));
         log.info("Saved project to {}", path);
     }
 
-    /**
-     * Compiles the current project to a .nfxc file.
-     *
-     * @param output the target .nfxc path
-     */
+    public void selectProject(ProjectTreeModel model) {
+        var project = model.project();
+        var def = project.functionDefinition();
+        var params = new LinkedHashMap<String, Parameter>();
+        for (String pn : def.parameterNames()) {
+            params.put(pn, new Parameter(pn, 1.0));
+        }
+        var newState = new ProjectState(project, model.projectPath(), List.of(), params);
+        needsResample = true;
+        setState(newState);
+    }
+
     public void compileProject(Path output) {
-        if (currentProject == null) return;
-        // Convert domain Project to file-format Project for compilation
+        if (state == null) return;
         var fileProject = new com.novafx.project.model.Project(
                 com.novafx.project.model.Project.CURRENT_VERSION,
-                new com.novafx.project.model.Meta(currentProject.name(), ""),
-                currentProject.functionDefinition(),
+                state.project().id().toString(),
+                new com.novafx.project.model.Meta(state.project().name(), ""),
+                state.functionDefinition(),
                 com.novafx.project.model.ParticleSettings.defaults(),
                 com.novafx.project.model.RenderSettings.defaults()
         );
@@ -273,88 +299,83 @@ public final class MainController {
     }
 
     // ---------------------------------------------------------------
-    // Export
+    //  Rename
     // ---------------------------------------------------------------
 
-    public void exportCsv(Path output) {
-        exportWith(new CsvExporter(), output);
+    public void renameProject(String newName) {
+        if (state == null || newName == null || newName.isBlank()) return;
+        var p = state.project();
+        var renamed = new Project(
+                p.id(), newName.trim(), p.description(),
+                p.functionDefinition(), p.createdAt(), Instant.now()
+        );
+        setState(state.withProject(renamed));
     }
 
-    public void exportJson(Path output) {
-        exportWith(new JsonExporter(), output);
-    }
+    // ---------------------------------------------------------------
+    //  Export
+    // ---------------------------------------------------------------
 
-    public void exportMcFunction(Path output) {
-        exportWith(new McFunctionExporter(), output);
-    }
+    public void exportCsv(Path output)  { exportWith(new CsvExporter(), output); }
+    public void exportJson(Path output) { exportWith(new JsonExporter(), output); }
+    public void exportMcFunction(Path output) { exportWith(new McFunctionExporter(), output); }
 
     private void exportWith(Exporter exporter, Path output) {
-        if (currentProject != null) {
-            exporter.export(currentProject, output);
-        }
+        if (state != null) exporter.export(state.project(), output);
+    }
+
+    public void saveCurrentAsPreset(String name) {
+        if (state == null) return;
+        log.info("Preset '{}' would be saved (feature coming)", name);
     }
 
     // ---------------------------------------------------------------
-    // Internal
+    //  Internal
     // ---------------------------------------------------------------
 
-    private void refreshParameters() {
-        currentParameters.clear();
-        FunctionDefinition def = getCurrentDefinition();
-        if (def == null) return;
-
-        for (String name : def.parameterNames()) {
-            currentParameters.put(name, new Parameter(name, 1.0));
-        }
-
-        if (onParametersChanged != null) {
-            onParametersChanged.run();
-        }
-    }
-
-    private void resample() {
-        if (currentProject == null) return;
-
-        FunctionDefinition def = currentProject.functionDefinition();
+    private static ProjectState resample(ProjectState s) {
+        var def = s.functionDefinition();
         long count = def.sampleCount();
         if (count > Integer.MAX_VALUE) {
             throw new IllegalArgumentException("Sample count " + count + " exceeds maximum");
         }
-
         int maxIter = (int) count;
-        List<Vector3d> points = new ArrayList<>(maxIter);
-
+        var points = new ArrayList<Vector3d>(maxIter);
         for (int i = 0; i < maxIter; i++) {
             double t = def.start() + i * def.step();
             if (t > def.end() + 1e-12) break;
-
-            Map<String, Double> vars = buildVars(t);
+            Map<String, Double> vars = buildVars(t, s.parameters());
             double x = def.xCompiled().evaluate(vars);
             double y = def.yCompiled().evaluate(vars);
             double z = def.zCompiled().evaluate(vars);
             points.add(new Vector3d(x, y, z));
         }
-
-        this.currentPoints = points;
-        log.debug("Sampled {} points for project '{}'", points.size(), currentProject.name());
-
-        if (onPointsChanged != null) {
-            onPointsChanged.run();
-        }
+        log.debug("Sampled {} points", points.size());
+        return s.withPoints(points);
     }
 
-    private Map<String, Double> buildVars(double t) {
-        Map<String, Double> vars = new HashMap<>();
+    private static String formatParamValue(double value) {
+        if (value == Math.floor(value) && !Double.isInfinite(value)) {
+            return String.valueOf((long) value);
+        }
+        return String.valueOf(value);
+    }
+
+    private static Map<String, Double> buildVars(double t,
+                                                  Map<String, Parameter> params) {
+        var vars = new HashMap<String, Double>();
         vars.put("t", t);
-        for (Parameter p : currentParameters.values()) {
+        for (var p : params.values()) {
             vars.put(p.name(), p.value());
         }
         return vars;
     }
 
-    private void fireProjectChanged() {
-        if (onProjectChanged != null) {
-            onProjectChanged.run();
-        }
+    private void addCurrentToWorkspace() {
+        if (state == null) return;
+        String id = state.project().id().toString();
+        if (workspace.findById(id).isPresent()) return;
+        var model = ProjectTreeModel.from(state.project(), state.projectPath());
+        workspace.addProject(model);
     }
 }

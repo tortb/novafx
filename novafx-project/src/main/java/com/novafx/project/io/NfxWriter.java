@@ -43,6 +43,10 @@ public final class NfxWriter implements ProjectWriter {
         // Version
         sb.append("version = ").append(quote(project.version())).append('\n');
 
+        // [project] — persistent UUID
+        sb.append("\n[project]\n");
+        sb.append("id = ").append(quote(project.id())).append('\n');
+
         // [meta]
         sb.append("\n[meta]\n");
         Meta meta = project.meta();

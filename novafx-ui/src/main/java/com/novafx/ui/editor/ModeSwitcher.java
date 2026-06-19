@@ -67,6 +67,20 @@ public final class ModeSwitcher extends HBox {
         return (ParserHub.InputMode) selected.getUserData();
     }
 
+    /**
+     * Programmatically selects a mode.
+     *
+     * @param mode the mode to select
+     */
+    public void setMode(ParserHub.InputMode mode) {
+        for (var toggle : group.getToggles()) {
+            if (toggle.getUserData() == mode) {
+                toggle.setSelected(true);
+                break;
+            }
+        }
+    }
+
     private ToggleButton createButton(String text, ParserHub.InputMode mode) {
         ToggleButton btn = new ToggleButton(text);
         btn.setToggleGroup(group);
