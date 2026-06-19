@@ -1,0 +1,17 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+NovaFX Function AST,com.novafx.function,CompiledFunction,0,72,0,4,0,18,0,9,0,7
+NovaFX Function AST,com.novafx.function,Parameter,39,0,0,0,4,0,3,0,3,0
+NovaFX Function AST,com.novafx.function,AstNode.UnaryNode,0,9,0,0,0,1,0,1,0,1
+NovaFX Function AST,com.novafx.function,AstNode.UnaryOp,0,15,0,0,0,3,0,1,0,1
+NovaFX Function AST,com.novafx.function,AstNode.BinaryNode,0,12,0,0,0,1,0,1,0,1
+NovaFX Function AST,com.novafx.function,Token,0,22,0,0,0,3,0,2,0,2
+NovaFX Function AST,com.novafx.function,AstNode.ConstantNode,0,6,0,0,0,1,0,1,0,1
+NovaFX Function AST,com.novafx.function,TokenType,0,69,0,0,0,12,0,1,0,1
+NovaFX Function AST,com.novafx.function,Tokenizer,10,283,8,55,2,63,8,34,0,7
+NovaFX Function AST,com.novafx.function,ParameterExtractor,0,93,0,5,0,18,0,10,0,6
+NovaFX Function AST,com.novafx.function,AstEvaluator,3,334,1,31,1,46,1,31,0,7
+NovaFX Function AST,com.novafx.function,AstParser,6,311,2,34,2,75,2,28,0,12
+NovaFX Function AST,com.novafx.function,AstNode.VariableNode,0,6,0,0,0,1,0,1,0,1
+NovaFX Function AST,com.novafx.function,AstNode.BinaryOp,0,33,0,0,0,6,0,1,0,1
+NovaFX Function AST,com.novafx.function,AstPrinter,12,126,5,11,4,16,5,10,0,4
+NovaFX Function AST,com.novafx.function,AstNode.FunctionNode,0,9,0,0,0,1,0,1,0,1

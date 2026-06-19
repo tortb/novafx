@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PresetPanel.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">NovaFX UI</a> &gt; <a href="index.source.html" class="el_package">com.novafx.ui.view</a> &gt; <span class="el_source">PresetPanel.java</span></div><h1>PresetPanel.java</h1><pre class="source lang-java linenums">package com.novafx.ui.view;
+
+import javafx.collections.FXCollections;
+import javafx.geometry.Insets;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
+import javafx.scene.layout.VBox;
+
+import java.util.List;
+import java.util.function.Consumer;
+
+/**
+ * Left-side panel listing available presets.
+ * &lt;p&gt;
+ * Clicking a preset notifies the registered callback with the preset name.
+ */
+public final class PresetPanel extends VBox {
+
+<span class="nc" id="L19">    private final ListView&lt;String&gt; listView = new ListView&lt;&gt;();</span>
+
+    private Consumer&lt;String&gt; onPresetSelected;
+
+    /** Creates the preset panel with the given preset names. */
+<span class="nc" id="L24">    public PresetPanel(List&lt;String&gt; presetNames) {</span>
+<span class="nc" id="L25">        setPadding(new Insets(8));</span>
+<span class="nc" id="L26">        setSpacing(6);</span>
+<span class="nc" id="L27">        setPrefWidth(160);</span>
+<span class="nc" id="L28">        setMinWidth(120);</span>
+
+<span class="nc" id="L30">        Label header = new Label(&quot;Presets&quot;);</span>
+<span class="nc" id="L31">        header.setStyle(&quot;-fx-font-size: 14; -fx-font-weight: bold;&quot;);</span>
+
+<span class="nc" id="L33">        listView.setItems(FXCollections.observableArrayList(presetNames));</span>
+<span class="nc" id="L34">        listView.setPrefHeight(300);</span>
+<span class="nc" id="L35">        listView.getSelectionModel().selectedItemProperty().addListener((obs, old, selected) -&gt; {</span>
+<span class="nc bnc" id="L36" title="All 4 branches missed.">            if (selected != null &amp;&amp; onPresetSelected != null) {</span>
+<span class="nc" id="L37">                onPresetSelected.accept(selected);</span>
+            }
+<span class="nc" id="L39">        });</span>
+
+<span class="nc" id="L41">        getChildren().addAll(header, listView);</span>
+<span class="nc" id="L42">        VBox.setVgrow(listView, javafx.scene.layout.Priority.ALWAYS);</span>
+<span class="nc" id="L43">    }</span>
+
+    /** Sets the callback invoked when a preset is selected. */
+    public void setOnPresetSelected(Consumer&lt;String&gt; callback) {
+<span class="nc" id="L47">        this.onPresetSelected = callback;</span>
+<span class="nc" id="L48">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

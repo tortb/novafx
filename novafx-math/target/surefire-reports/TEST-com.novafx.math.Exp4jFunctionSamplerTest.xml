@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" version="3.0.2" name="com.novafx.math.Exp4jFunctionSamplerTest" time="0.289" tests="10" errors="0" skipped="0" failures="0">
+  <properties>
+    <property name="java.specification.version" value="25"/>
+    <property name="sun.jnu.encoding" value="UTF-8"/>
+    <property name="java.class.path" value="/home/tortb/claude-code/novafx/novafx-math/target/test-classes:/home/tortb/claude-code/novafx/novafx-math/target/classes:/home/tortb/claude-code/novafx/novafx-function/target/classes:/home/tortb/.m2/repository/net/objecthunter/exp4j/0.4.8/exp4j-0.4.8.jar:/home/tortb/.m2/repository/org/slf4j/slf4j-api/2.0.17/slf4j-api-2.0.17.jar:/home/tortb/.m2/repository/ch/qos/logback/logback-classic/1.5.17/logback-classic-1.5.17.jar:/home/tortb/.m2/repository/ch/qos/logback/logback-core/1.5.17/logback-core-1.5.17.jar:/home/tortb/.m2/repository/org/junit/jupiter/junit-jupiter/5.12.1/junit-jupiter-5.12.1.jar:/home/tortb/.m2/repository/org/junit/jupiter/junit-jupiter-api/5.12.1/junit-jupiter-api-5.12.1.jar:/home/tortb/.m2/repository/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar:/home/tortb/.m2/repository/org/junit/platform/junit-platform-commons/1.12.1/junit-platform-commons-1.12.1.jar:/home/tortb/.m2/repository/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/home/tortb/.m2/repository/org/junit/jupiter/junit-jupiter-params/5.12.1/junit-jupiter-params-5.12.1.jar:/home/tortb/.m2/repository/org/junit/jupiter/junit-jupiter-engine/5.12.1/junit-jupiter-engine-5.12.1.jar:/home/tortb/.m2/repository/org/junit/platform/junit-platform-engine/1.12.1/junit-platform-engine-1.12.1.jar:/home/tortb/.m2/repository/org/assertj/assertj-core/3.27.3/assertj-core-3.27.3.jar:/home/tortb/.m2/repository/net/bytebuddy/byte-buddy/1.15.11/byte-buddy-1.15.11.jar:"/>
+    <property name="java.vm.vendor" value="Oracle Corporation"/>
+    <property name="sun.arch.data.model" value="64"/>
+    <property name="java.vendor.url" value="https://java.oracle.com/"/>
+    <property name="user.timezone" value="Asia/Shanghai"/>
+    <property name="os.name" value="Linux"/>
+    <property name="java.vm.specification.version" value="25"/>
+    <property name="sun.java.launcher" value="SUN_STANDARD"/>
+    <property name="user.country" value="CN"/>
+    <property name="sun.boot.library.path" value="/usr/lib/jvm/jdk-25.0.3-oracle-x64/lib"/>
+    <property name="sun.java.command" value="/home/tortb/claude-code/novafx/novafx-math/target/surefire/surefirebooter-20260619131824473_6.jar /home/tortb/claude-code/novafx/novafx-math/target/surefire 2026-06-19T13-18-22_879-jvmRun1 surefire-20260619131824473_4tmp surefire_1-20260619131824473_5tmp"/>
+    <property name="jdk.debug" value="release"/>
+    <property name="surefire.test.class.path" value="/home/tortb/claude-code/novafx/novafx-math/target/test-classes:/home/tortb/claude-code/novafx/novafx-math/target/classes:/home/tortb/claude-code/novafx/novafx-function/target/classes:/home/tortb/.m2/repository/net/objecthunter/exp4j/0.4.8/exp4j-0.4.8.jar:/home/tortb/.m2/repository/org/slf4j/slf4j-api/2.0.17/slf4j-api-2.0.17.jar:/home/tortb/.m2/repository/ch/qos/logback/logback-classic/1.5.17/logback-classic-1.5.17.jar:/home/tortb/.m2/repository/ch/qos/logback/logback-core/1.5.17/logback-core-1.5.17.jar:/home/tortb/.m2/repository/org/junit/jupiter/junit-jupiter/5.12.1/junit-jupiter-5.12.1.jar:/home/tortb/.m2/repository/org/junit/jupiter/junit-jupiter-api/5.12.1/junit-jupiter-api-5.12.1.jar:/home/tortb/.m2/repository/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar:/home/tortb/.m2/repository/org/junit/platform/junit-platform-commons/1.12.1/junit-platform-commons-1.12.1.jar:/home/tortb/.m2/repository/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/home/tortb/.m2/repository/org/junit/jupiter/junit-jupiter-params/5.12.1/junit-jupiter-params-5.12.1.jar:/home/tortb/.m2/repository/org/junit/jupiter/junit-jupiter-engine/5.12.1/junit-jupiter-engine-5.12.1.jar:/home/tortb/.m2/repository/org/junit/platform/junit-platform-engine/1.12.1/junit-platform-engine-1.12.1.jar:/home/tortb/.m2/repository/org/assertj/assertj-core/3.27.3/assertj-core-3.27.3.jar:/home/tortb/.m2/repository/net/bytebuddy/byte-buddy/1.15.11/byte-buddy-1.15.11.jar:"/>
+    <property name="sun.cpu.endian" value="little"/>
+    <property name="user.home" value="/home/tortb"/>
+    <property name="user.language" value="zh"/>
+    <property name="java.specification.vendor" value="Oracle Corporation"/>
+    <property name="java.version.date" value="2026-04-21"/>
+    <property name="java.home" value="/usr/lib/jvm/jdk-25.0.3-oracle-x64"/>
+    <property name="file.separator" value="/"/>
+    <property name="basedir" value="/home/tortb/claude-code/novafx/novafx-math"/>
+    <property name="java.vm.compressedOopsMode" value="32-bit"/>
+    <property name="line.separator" value="&#10;"/>
+    <property name="java.specification.name" value="Java Platform API Specification"/>
+    <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
+    <property name="surefire.real.class.path" value="/home/tortb/claude-code/novafx/novafx-math/target/surefire/surefirebooter-20260619131824473_6.jar"/>
+    <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
+    <property name="java.runtime.version" value="25.0.3+9-LTS-195"/>
+    <property name="user.name" value="tortb"/>
+    <property name="stdout.encoding" value="UTF-8"/>
+    <property name="path.separator" value=":"/>
+    <property name="os.version" value="6.17.0-35-generic"/>
+    <property name="java.runtime.name" value="Java(TM) SE Runtime Environment"/>
+    <property name="file.encoding" value="UTF-8"/>
+    <property name="java.vm.name" value="Java HotSpot(TM) 64-Bit Server VM"/>
+    <property name="localRepository" value="/home/tortb/.m2/repository"/>
+    <property name="java.vendor.url.bug" value="https://bugreport.java.com/bugreport/"/>
+    <property name="java.io.tmpdir" value="/tmp"/>
+    <property name="java.version" value="25.0.3"/>
+    <property name="user.dir" value="/home/tortb/claude-code/novafx/novafx-math"/>
+    <property name="os.arch" value="amd64"/>
+    <property name="java.vm.specification.name" value="Java Virtual Machine Specification"/>
+    <property name="native.encoding" value="UTF-8"/>
+    <property name="java.library.path" value="/usr/java/packages/lib:/usr/lib64:/lib64:/lib:/usr/lib"/>
+    <property name="java.vm.info" value="mixed mode, sharing"/>
+    <property name="stderr.encoding" value="UTF-8"/>
+    <property name="java.vendor" value="Oracle Corporation"/>
+    <property name="java.vm.version" value="25.0.3+9-LTS-195"/>
+    <property name="stdin.encoding" value="UTF-8"/>
+    <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
+    <property name="java.class.version" value="69.0"/>
+  </properties>
+  <testcase name="shouldHandleNegativeT" classname="com.novafx.math.Exp4jFunctionSamplerTest" time="0.027">
+    <system-out><![CDATA[13:18:26.145 [DEBUG] c.novafx.math.Exp4jFunctionSampler - Sampled 3 points from FunctionDefinition{x='t', y='t', z='t', start=-5.0, end=-3.0, step=1.0}
+]]></system-out>
+  </testcase>
+  <testcase name="shouldSampleLinearFunction" classname="com.novafx.math.Exp4jFunctionSamplerTest" time="0.014">
+    <system-out><![CDATA[13:18:26.168 [DEBUG] c.novafx.math.Exp4jFunctionSampler - Sampled 3 points from FunctionDefinition{x='t', y='2*t', z='0', start=0.0, end=2.0, step=1.0}
+]]></system-out>
+  </testcase>
+  <testcase name="shouldHandleZeroRange" classname="com.novafx.math.Exp4jFunctionSamplerTest" time="0.002">
+    <system-out><![CDATA[13:18:26.180 [DEBUG] c.novafx.math.Exp4jFunctionSampler - Sampled 1 points from FunctionDefinition{x='t', y='t', z='t', start=5.0, end=5.0, step=0.1}
+]]></system-out>
+  </testcase>
+  <testcase name="shouldHandleLargeSampleSet" classname="com.novafx.math.Exp4jFunctionSamplerTest" time="0.208">
+    <system-out><![CDATA[13:18:26.388 [DEBUG] c.novafx.math.Exp4jFunctionSampler - Sampled 10001 points from FunctionDefinition{x='cos(t)', y='sin(t)', z='t/10', start=0.0, end=100.0, step=0.01}
+]]></system-out>
+  </testcase>
+  <testcase name="shouldSampleConstantPoint" classname="com.novafx.math.Exp4jFunctionSamplerTest" time="0.001">
+    <system-out><![CDATA[13:18:26.390 [DEBUG] c.novafx.math.Exp4jFunctionSampler - Sampled 1 points from FunctionDefinition{x='1', y='2', z='3', start=0.0, end=0.0, step=1.0}
+]]></system-out>
+  </testcase>
+  <testcase name="shouldRejectNullDefinition" classname="com.novafx.math.Exp4jFunctionSamplerTest" time="0.001"/>
+  <testcase name="shouldRespectStepSize" classname="com.novafx.math.Exp4jFunctionSamplerTest" time="0.002">
+    <system-out><![CDATA[13:18:26.394 [DEBUG] c.novafx.math.Exp4jFunctionSampler - Sampled 6 points from FunctionDefinition{x='t', y='t', z='t', start=0.0, end=1.0, step=0.2}
+]]></system-out>
+  </testcase>
+  <testcase name="shouldSampleCircleXY" classname="com.novafx.math.Exp4jFunctionSamplerTest" time="0.014">
+    <system-out><![CDATA[13:18:26.396 [DEBUG] c.novafx.math.Exp4jFunctionSampler - Sampled 5 points from FunctionDefinition{x='cos(t)', y='sin(t)', z='0', start=0.0, end=6.283185307179586, step=1.5707963267948966}
+]]></system-out>
+  </testcase>
+  <testcase name="shouldRejectInvalidExpression" classname="com.novafx.math.Exp4jFunctionSamplerTest" time="0.002"/>
+  <testcase name="shouldProduceCorrectPointCountForSpiral" classname="com.novafx.math.Exp4jFunctionSamplerTest" time="0.011">
+    <system-out><![CDATA[13:18:26.423 [DEBUG] c.novafx.math.Exp4jFunctionSampler - Sampled 503 points from FunctionDefinition{x='0.5*t*cos(t)', y='0.5*t*sin(t)', z='0', start=0.0, end=25.132741228718345, step=0.05}
+]]></system-out>
+  </testcase>
+</testsuite>

@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MatrixUtils.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">NovaFX Renderer</a> &gt; <a href="index.source.html" class="el_package">com.novafx.renderer</a> &gt; <span class="el_source">MatrixUtils.java</span></div><h1>MatrixUtils.java</h1><pre class="source lang-java linenums">package com.novafx.renderer;
+
+/**
+ * Utility methods for constructing 4x4 transformation matrices used in OpenGL.
+ * &lt;p&gt;
+ * Matrices are stored in column-major order as flat {@code float[16]} arrays,
+ * as required by {@code glUniformMatrix4fv}.
+ */
+public final class MatrixUtils {
+
+    private MatrixUtils() {
+        // utility class
+    }
+
+    /** Returns a 4x4 identity matrix in column-major order. */
+    public static float[] identity() {
+<span class="fc" id="L17">        return new float[]{</span>
+                1, 0, 0, 0,
+                0, 1, 0, 0,
+                0, 0, 1, 0,
+                0, 0, 0, 1
+        };
+    }
+
+    /**
+     * Multiplies two 4x4 matrices: {@code result = a * b}.
+     * Both inputs and the output are 16-element column-major arrays.
+     */
+    public static float[] multiply(float[] a, float[] b) {
+<span class="fc" id="L30">        float[] result = new float[16];</span>
+<span class="fc bfc" id="L31" title="All 2 branches covered.">        for (int col = 0; col &lt; 4; col++) {</span>
+<span class="fc bfc" id="L32" title="All 2 branches covered.">            for (int row = 0; row &lt; 4; row++) {</span>
+<span class="fc" id="L33">                float sum = 0;</span>
+<span class="fc bfc" id="L34" title="All 2 branches covered.">                for (int k = 0; k &lt; 4; k++) {</span>
+<span class="fc" id="L35">                    sum += a[k * 4 + row] * b[col * 4 + k];</span>
+                }
+<span class="fc" id="L37">                result[col * 4 + row] = sum;</span>
+            }
+        }
+<span class="fc" id="L40">        return result;</span>
+    }
+
+    /**
+     * Builds a perspective projection matrix.
+     *
+     * @param fovDegrees     vertical field of view in degrees
+     * @param aspect         width / height ratio
+     * @param near           near clipping plane distance
+     * @param far            far clipping plane distance
+     * @return column-major perspective projection matrix
+     */
+    public static float[] perspective(float fovDegrees, float aspect, float near, float far) {
+<span class="fc" id="L53">        float fovRad = (float) Math.toRadians(fovDegrees);</span>
+<span class="fc" id="L54">        float f = (float) (1.0 / Math.tan(fovRad / 2.0));</span>
+<span class="fc" id="L55">        float[] m = new float[16];</span>
+<span class="fc" id="L56">        m[0] = f / aspect;</span>
+<span class="fc" id="L57">        m[5] = f;</span>
+<span class="fc" id="L58">        m[10] = (far + near) / (near - far);</span>
+<span class="fc" id="L59">        m[11] = -1;</span>
+<span class="fc" id="L60">        m[14] = (2 * far * near) / (near - far);</span>
+<span class="fc" id="L61">        return m;</span>
+    }
+
+    /**
+     * Builds a look-at view matrix.
+     *
+     * @param eyeX   camera position x
+     * @param eyeY   camera position y
+     * @param eyeZ   camera position z
+     * @param centerX target position x (point the camera looks at)
+     * @param centerY target position y
+     * @param centerZ target position z
+     * @param upX     up vector x
+     * @param upY     up vector y
+     * @param upZ     up vector z
+     * @return column-major view matrix
+     */
+    public static float[] lookAt(float eyeX, float eyeY, float eyeZ,
+                                 float centerX, float centerY, float centerZ,
+                                 float upX, float upY, float upZ) {
+<span class="fc" id="L81">        float[] f = normalize(centerX - eyeX, centerY - eyeY, centerZ - eyeZ);</span>
+<span class="fc" id="L82">        float[] c = cross(f[0], f[1], f[2], upX, upY, upZ);</span>
+<span class="fc" id="L83">        float[] s = normalize(c[0], c[1], c[2]);</span>
+<span class="fc" id="L84">        float[] u = cross(s[0], s[1], s[2], f[0], f[1], f[2]);</span>
+
+<span class="fc" id="L86">        float[] m = identity();</span>
+<span class="fc" id="L87">        m[0] = s[0];</span>
+<span class="fc" id="L88">        m[1] = u[0];</span>
+<span class="fc" id="L89">        m[2] = -f[0];</span>
+<span class="fc" id="L90">        m[4] = s[1];</span>
+<span class="fc" id="L91">        m[5] = u[1];</span>
+<span class="fc" id="L92">        m[6] = -f[1];</span>
+<span class="fc" id="L93">        m[8] = s[2];</span>
+<span class="fc" id="L94">        m[9] = u[2];</span>
+<span class="fc" id="L95">        m[10] = -f[2];</span>
+<span class="fc" id="L96">        m[12] = -dot(s, eyeX, eyeY, eyeZ);</span>
+<span class="fc" id="L97">        m[13] = -dot(u, eyeX, eyeY, eyeZ);</span>
+<span class="fc" id="L98">        m[14] = dot(f, eyeX, eyeY, eyeZ);</span>
+<span class="fc" id="L99">        return m;</span>
+    }
+
+    private static float[] normalize(float x, float y, float z) {
+<span class="fc" id="L103">        float len = (float) Math.sqrt(x * x + y * y + z * z);</span>
+<span class="pc bpc" id="L104" title="1 of 2 branches missed.">        if (len == 0) return new float[]{0, 0, 0};</span>
+<span class="fc" id="L105">        return new float[]{x / len, y / len, z / len};</span>
+    }
+
+    private static float[] cross(float ax, float ay, float az, float bx, float by, float bz) {
+<span class="fc" id="L109">        return new float[]{</span>
+                ay * bz - az * by,
+                az * bx - ax * bz,
+                ax * by - ay * bx
+        };
+    }
+
+    private static float dot(float[] v, float x, float y, float z) {
+<span class="fc" id="L117">        return v[0] * x + v[1] * y + v[2] * z;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

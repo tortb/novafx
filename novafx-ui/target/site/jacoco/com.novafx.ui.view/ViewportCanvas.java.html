@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ViewportCanvas.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">NovaFX UI</a> &gt; <a href="index.source.html" class="el_package">com.novafx.ui.view</a> &gt; <span class="el_source">ViewportCanvas.java</span></div><h1>ViewportCanvas.java</h1><pre class="source lang-java linenums">package com.novafx.ui.view;
+
+import com.novafx.math.Vector3d;
+import javafx.scene.*;
+import javafx.scene.paint.Color;
+import javafx.scene.paint.PhongMaterial;
+import javafx.scene.shape.Box;
+import javafx.scene.shape.Line;
+import javafx.scene.shape.Sphere;
+import javafx.scene.transform.Rotate;
+import javafx.scene.transform.Translate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.List;
+
+/**
+ * A 3D viewport that displays sampled point clouds using JavaFX 3D.
+ * &lt;p&gt;
+ * Supports orbit camera controls (drag to rotate, scroll to zoom).
+ * Renders a coordinate grid, axes, and the sampled points as small spheres.
+ */
+public final class ViewportCanvas extends SubScene {
+
+<span class="nc" id="L25">    private static final Logger log = LoggerFactory.getLogger(ViewportCanvas.class);</span>
+
+    private static final double GRID_SIZE = 10.0;
+    private static final double GRID_DIVISIONS = 20.0;
+
+    private final Group root;
+    private final PerspectiveCamera camera;
+    private final Group pointGroup;
+    private final Group gridGroup;
+
+    private double mouseX;
+    private double mouseY;
+<span class="nc" id="L37">    private double cameraDistance = 20.0;</span>
+<span class="nc" id="L38">    private double azimuth = 45.0;</span>
+<span class="nc" id="L39">    private double elevation = 30.0;</span>
+
+<span class="nc" id="L41">    private double pointRadius = 0.08;</span>
+<span class="nc" id="L42">    private Color pointColor = Color.CORNFLOWERBLUE;</span>
+<span class="nc" id="L43">    private boolean showGrid = true;</span>
+
+    /**
+     * Creates a 3D viewport.
+     *
+     * @param width  initial width in pixels
+     * @param height initial height in pixels
+     */
+    public ViewportCanvas(double width, double height) {
+<span class="nc" id="L52">        super(new Group(), width, height, true, SceneAntialiasing.BALANCED);</span>
+
+<span class="nc" id="L54">        this.root = (Group) getRoot();</span>
+<span class="nc" id="L55">        this.camera = new PerspectiveCamera(true);</span>
+<span class="nc" id="L56">        this.pointGroup = new Group();</span>
+<span class="nc" id="L57">        this.gridGroup = new Group();</span>
+
+<span class="nc" id="L59">        setupCamera();</span>
+<span class="nc" id="L60">        buildGrid();</span>
+<span class="nc" id="L61">        setupInteraction();</span>
+
+<span class="nc" id="L63">        root.getChildren().addAll(gridGroup, pointGroup);</span>
+
+<span class="nc" id="L65">        setCamera(camera);</span>
+<span class="nc" id="L66">        setFill(Color.web(&quot;0.05 0.05 0.08&quot;));</span>
+
+<span class="nc" id="L68">        log.info(&quot;ViewportCanvas initialized ({}x{})&quot;, (int) width, (int) height);</span>
+<span class="nc" id="L69">    }</span>
+
+    // ---------------------------------------------------------------
+    // Public API
+    // ---------------------------------------------------------------
+
+    /** Updates the displayed point cloud. */
+    public void setPoints(List&lt;Vector3d&gt; points) {
+<span class="nc" id="L77">        pointGroup.getChildren().clear();</span>
+<span class="nc bnc" id="L78" title="All 4 branches missed.">        if (points == null || points.isEmpty()) return;</span>
+
+<span class="nc" id="L80">        PhongMaterial material = new PhongMaterial(pointColor);</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">        for (Vector3d p : points) {</span>
+<span class="nc" id="L82">            Sphere sphere = new Sphere(pointRadius, 4);</span>
+<span class="nc" id="L83">            sphere.setMaterial(material);</span>
+<span class="nc" id="L84">            sphere.setTranslateX(p.x());</span>
+<span class="nc" id="L85">            sphere.setTranslateY(p.y());</span>
+<span class="nc" id="L86">            sphere.setTranslateZ(p.z());</span>
+<span class="nc" id="L87">            pointGroup.getChildren().add(sphere);</span>
+<span class="nc" id="L88">        }</span>
+<span class="nc" id="L89">        log.debug(&quot;Rendered {} points in viewport&quot;, points.size());</span>
+<span class="nc" id="L90">    }</span>
+
+    /** Sets the point radius. */
+    public void setPointRadius(double radius) {
+<span class="nc" id="L94">        this.pointRadius = Math.max(0.01, radius);</span>
+        // Re-render with new size
+<span class="nc" id="L96">        PhongMaterial material = new PhongMaterial(pointColor);</span>
+<span class="nc bnc" id="L97" title="All 2 branches missed.">        for (var node : pointGroup.getChildren()) {</span>
+<span class="nc bnc" id="L98" title="All 2 branches missed.">            if (node instanceof Sphere sphere) {</span>
+<span class="nc" id="L99">                sphere.setRadius(this.pointRadius);</span>
+<span class="nc" id="L100">                sphere.setMaterial(material);</span>
+            }
+<span class="nc" id="L102">        }</span>
+<span class="nc" id="L103">    }</span>
+
+    /** Sets the point color. */
+    public void setPointColor(Color color) {
+<span class="nc" id="L107">        this.pointColor = color;</span>
+<span class="nc" id="L108">        PhongMaterial material = new PhongMaterial(color);</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">        for (var node : pointGroup.getChildren()) {</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">            if (node instanceof Sphere sphere) {</span>
+<span class="nc" id="L111">                sphere.setMaterial(material);</span>
+            }
+<span class="nc" id="L113">        }</span>
+<span class="nc" id="L114">    }</span>
+
+    /** Shows or hides the grid. */
+    public void setShowGrid(boolean show) {
+<span class="nc" id="L118">        this.showGrid = show;</span>
+<span class="nc" id="L119">        gridGroup.setVisible(show);</span>
+<span class="nc" id="L120">    }</span>
+
+    /** Resets the camera to default position. */
+    public void resetCamera() {
+<span class="nc" id="L124">        cameraDistance = 20.0;</span>
+<span class="nc" id="L125">        azimuth = 45.0;</span>
+<span class="nc" id="L126">        elevation = 30.0;</span>
+<span class="nc" id="L127">        updateCameraPosition();</span>
+<span class="nc" id="L128">    }</span>
+
+    // ---------------------------------------------------------------
+    // Camera
+    // ---------------------------------------------------------------
+
+    private void setupCamera() {
+<span class="nc" id="L135">        camera.setNearClip(0.1);</span>
+<span class="nc" id="L136">        camera.setFarClip(1000.0);</span>
+<span class="nc" id="L137">        camera.setFieldOfView(60);</span>
+<span class="nc" id="L138">        updateCameraPosition();</span>
+<span class="nc" id="L139">    }</span>
+
+    private void updateCameraPosition() {
+<span class="nc" id="L142">        double radAz = Math.toRadians(azimuth);</span>
+<span class="nc" id="L143">        double radEl = Math.toRadians(elevation);</span>
+<span class="nc" id="L144">        double x = cameraDistance * Math.cos(radEl) * Math.sin(radAz);</span>
+<span class="nc" id="L145">        double y = cameraDistance * Math.sin(radEl);</span>
+<span class="nc" id="L146">        double z = cameraDistance * Math.cos(radEl) * Math.cos(radAz);</span>
+
+<span class="nc" id="L148">        camera.getTransforms().clear();</span>
+<span class="nc" id="L149">        camera.getTransforms().addAll(</span>
+                new Rotate(-elevation, Rotate.X_AXIS),
+                new Rotate(-azimuth, Rotate.Y_AXIS),
+                new Translate(-x, -y, -z)
+        );
+<span class="nc" id="L154">    }</span>
+
+    // ---------------------------------------------------------------
+    // Grid
+    // ---------------------------------------------------------------
+
+    private void buildGrid() {
+<span class="nc" id="L161">        gridGroup.getChildren().clear();</span>
+
+<span class="nc" id="L163">        double half = GRID_SIZE;</span>
+<span class="nc" id="L164">        double step = (2.0 * GRID_SIZE) / GRID_DIVISIONS;</span>
+
+        // Grid lines in XZ plane
+<span class="nc bnc" id="L167" title="All 2 branches missed.">        for (double pos = -half; pos &lt;= half + 0.001; pos += step) {</span>
+            // Line parallel to X
+<span class="nc" id="L169">            Line lineX = new Line(-half, -half, half, -half);</span>
+<span class="nc" id="L170">            lineX.setTranslateX(0);</span>
+<span class="nc" id="L171">            lineX.setTranslateZ(pos);</span>
+<span class="nc" id="L172">            lineX.setStroke(Color.gray(0.3));</span>
+<span class="nc" id="L173">            lineX.setStrokeWidth(0.5);</span>
+
+            // Line parallel to Z
+<span class="nc" id="L176">            Line lineZ = new Line(-half, -half, half, -half);</span>
+<span class="nc" id="L177">            lineZ.setTranslateX(pos);</span>
+<span class="nc" id="L178">            lineZ.setTranslateZ(0);</span>
+<span class="nc" id="L179">            lineZ.setStroke(Color.gray(0.3));</span>
+<span class="nc" id="L180">            lineZ.setStrokeWidth(0.5);</span>
+
+<span class="nc" id="L182">            gridGroup.getChildren().addAll(lineX, lineZ);</span>
+        }
+<span class="nc" id="L184">    }</span>
+
+    // ---------------------------------------------------------------
+    // Mouse interaction
+    // ---------------------------------------------------------------
+
+    private void setupInteraction() {
+<span class="nc" id="L191">        setOnMousePressed(event -&gt; {</span>
+<span class="nc" id="L192">            mouseX = event.getSceneX();</span>
+<span class="nc" id="L193">            mouseY = event.getSceneY();</span>
+<span class="nc" id="L194">        });</span>
+
+<span class="nc" id="L196">        setOnMouseDragged(event -&gt; {</span>
+<span class="nc" id="L197">            double dx = event.getSceneX() - mouseX;</span>
+<span class="nc" id="L198">            double dy = event.getSceneY() - mouseY;</span>
+<span class="nc" id="L199">            mouseX = event.getSceneX();</span>
+<span class="nc" id="L200">            mouseY = event.getSceneY();</span>
+
+<span class="nc bnc" id="L202" title="All 2 branches missed.">            if (event.isPrimaryButtonDown()) {</span>
+<span class="nc" id="L203">                azimuth += dx * 0.5;</span>
+<span class="nc" id="L204">                elevation = Math.max(-89, Math.min(89, elevation - dy * 0.5));</span>
+<span class="nc" id="L205">                updateCameraPosition();</span>
+<span class="nc bnc" id="L206" title="All 2 branches missed.">            } else if (event.isSecondaryButtonDown()) {</span>
+                // Pan
+<span class="nc" id="L208">                root.setTranslateX(root.getTranslateX() + dx * 0.02);</span>
+<span class="nc" id="L209">                root.setTranslateY(root.getTranslateY() - dy * 0.02);</span>
+            }
+<span class="nc" id="L211">        });</span>
+
+<span class="nc" id="L213">        setOnScroll(event -&gt; {</span>
+<span class="nc" id="L214">            cameraDistance = Math.max(2.0, Math.min(200.0, cameraDistance - event.getDeltaY() * 0.1));</span>
+<span class="nc" id="L215">            updateCameraPosition();</span>
+<span class="nc" id="L216">        });</span>
+<span class="nc" id="L217">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

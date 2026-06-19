@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MathPresets.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">NovaFX Math</a> &gt; <a href="index.source.html" class="el_package">com.novafx.math</a> &gt; <span class="el_source">MathPresets.java</span></div><h1>MathPresets.java</h1><pre class="source lang-java linenums">package com.novafx.math;
+
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Built-in parametric function presets.
+ * &lt;p&gt;
+ * Each preset has a human-readable name and a corresponding
+ * {@link FunctionDefinition} that produces a well-known 3D shape.
+ * All presets use the parameter variable {@code t}.
+ */
+public final class MathPresets {
+
+    private MathPresets() {
+        // utility class
+    }
+
+    /**
+     * Returns an ordered map of all built-in presets keyed by name.
+     * The order is stable and suitable for display in a UI list.
+     *
+     * @return name-to-definition map
+     */
+    public static Map&lt;String, FunctionDefinition&gt; all() {
+<span class="fc" id="L28">        Map&lt;String, FunctionDefinition&gt; presets = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L29">        presets.put(&quot;Circle&quot;, circle());</span>
+<span class="fc" id="L30">        presets.put(&quot;Heart&quot;, heart());</span>
+<span class="fc" id="L31">        presets.put(&quot;Star&quot;, star());</span>
+<span class="fc" id="L32">        presets.put(&quot;Spiral&quot;, spiral());</span>
+<span class="fc" id="L33">        presets.put(&quot;DoubleSpiral&quot;, doubleSpiral());</span>
+<span class="fc" id="L34">        presets.put(&quot;Infinity&quot;, infinity());</span>
+<span class="fc" id="L35">        presets.put(&quot;Flower&quot;, flower());</span>
+<span class="fc" id="L36">        presets.put(&quot;Wave&quot;, wave());</span>
+<span class="fc" id="L37">        presets.put(&quot;Helix&quot;, helix());</span>
+<span class="fc" id="L38">        return Collections.unmodifiableMap(new LinkedHashMap&lt;&gt;(presets));</span>
+    }
+
+    /**
+     * Returns a preset by name, or {@code null} if not found.
+     *
+     * @param name the preset name
+     * @return the matching definition, or null
+     */
+    public static FunctionDefinition byName(String name) {
+<span class="fc" id="L48">        return all().get(name);</span>
+    }
+
+    /**
+     * Returns the list of all preset names in display order.
+     *
+     * @return immutable list of names
+     */
+    public static List&lt;String&gt; names() {
+<span class="fc" id="L57">        return List.copyOf(all().keySet());</span>
+    }
+
+    // ---------------------------------------------------------------
+    // Preset definitions
+    // ---------------------------------------------------------------
+
+    /** Circle in the XY-plane: radius 3, centered at origin. */
+    public static FunctionDefinition circle() {
+<span class="fc" id="L66">        return new FunctionDefinition(</span>
+                &quot;3*cos(t)&quot;,
+                &quot;3*sin(t)&quot;,
+                &quot;0&quot;,
+                0, 2 * Math.PI, 0.05
+        );
+    }
+
+    /** Heart shape in the XY-plane using a classic parametric formula. */
+    public static FunctionDefinition heart() {
+<span class="fc" id="L76">        return new FunctionDefinition(</span>
+                &quot;16*pow(sin(t),3)&quot;,
+                &quot;13*cos(t)-5*cos(2*t)-2*cos(3*t)-cos(4*t)&quot;,
+                &quot;0&quot;,
+                0, 2 * Math.PI, 0.05
+        );
+    }
+
+    /** 5-pointed star in the XY-plane. */
+    public static FunctionDefinition star() {
+<span class="fc" id="L86">        return new FunctionDefinition(</span>
+                &quot;3*cos(1.25*t)*cos(t)&quot;,
+                &quot;3*cos(1.25*t)*sin(t)&quot;,
+                &quot;0&quot;,
+                0, 8 * Math.PI, 0.05
+        );
+    }
+
+    /** Flat spiral winding outward in the XY-plane. */
+    public static FunctionDefinition spiral() {
+<span class="fc" id="L96">        return new FunctionDefinition(</span>
+                &quot;0.5*t*cos(t)&quot;,
+                &quot;0.5*t*sin(t)&quot;,
+                &quot;0&quot;,
+                0, 8 * Math.PI, 0.05
+        );
+    }
+
+    /** Two oppositely winding spirals. */
+    public static FunctionDefinition doubleSpiral() {
+<span class="fc" id="L106">        return new FunctionDefinition(</span>
+                &quot;3*cos(t)&quot;,
+                &quot;3*sin(t)&quot;,
+                &quot;t/2&quot;,
+                0, 8 * Math.PI, 0.05
+        );
+    }
+
+    /** Infinity symbol (lemniscate) in the XY-plane. */
+    public static FunctionDefinition infinity() {
+<span class="fc" id="L116">        return new FunctionDefinition(</span>
+                &quot;3*cos(t)/(1+pow(sin(t),2))&quot;,
+                &quot;3*cos(t)*sin(t)/(1+pow(sin(t),2))&quot;,
+                &quot;0&quot;,
+                0, 2 * Math.PI, 0.03
+        );
+    }
+
+    /** 5-petal flower (rose curve). */
+    public static FunctionDefinition flower() {
+<span class="fc" id="L126">        return new FunctionDefinition(</span>
+                &quot;3*cos(2.5*t)*cos(t)&quot;,
+                &quot;3*cos(2.5*t)*sin(t)&quot;,
+                &quot;0&quot;,
+                0, 4 * Math.PI, 0.03
+        );
+    }
+
+    /** Sine wave in the XZ-plane. */
+    public static FunctionDefinition wave() {
+<span class="fc" id="L136">        return new FunctionDefinition(</span>
+                &quot;t/2&quot;,
+                &quot;2*sin(t)&quot;,
+                &quot;0&quot;,
+                0, 4 * Math.PI, 0.05
+        );
+    }
+
+    /** 3D helix rising along the Z-axis. */
+    public static FunctionDefinition helix() {
+<span class="fc" id="L146">        return new FunctionDefinition(</span>
+                &quot;3*cos(t)&quot;,
+                &quot;3*sin(t)&quot;,
+                &quot;t/3&quot;,
+                0, 6 * Math.PI, 0.05
+        );
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

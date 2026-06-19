@@ -1,0 +1,8 @@
+com/novafx/function/AstParserTest.class
+com/novafx/function/FourierSeriesTest.class
+com/novafx/function/ParameterExtractorTest.class
+com/novafx/function/CompiledFunctionTest.class
+com/novafx/function/CompletionEngineTest.class
+com/novafx/function/TokenizerTest.class
+com/novafx/function/AstEvaluatorTest.class
+com/novafx/function/AstPrinterTest.class

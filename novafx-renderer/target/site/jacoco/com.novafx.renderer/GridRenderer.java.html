@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GridRenderer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">NovaFX Renderer</a> &gt; <a href="index.source.html" class="el_package">com.novafx.renderer</a> &gt; <span class="el_source">GridRenderer.java</span></div><h1>GridRenderer.java</h1><pre class="source lang-java linenums">package com.novafx.renderer;
+
+import com.novafx.math.Vector3d;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.lwjgl.opengl.GL33.*;
+
+/**
+ * Renders a coordinate grid with X (red), Y (green), Z (blue) axes
+ * and a ground-plane grid in the XZ-plane.
+ * &lt;p&gt;
+ * The grid spans {@code [-gridSize, gridSize]} with {@code subdivisions}
+ * cells per side.
+ */
+public final class GridRenderer {
+
+<span class="nc" id="L21">    private static final Logger log = LoggerFactory.getLogger(GridRenderer.class);</span>
+
+    private final int gridSize;
+    private final int subdivisions;
+
+    private int gridVao;
+    private int gridVbo;
+    private int gridVertexCount;
+
+    private int axisVao;
+    private int axisVbo;
+    private int axisVertexCount;
+
+    private boolean initialized;
+
+    /** Creates a grid renderer with the given extent and density. */
+<span class="nc" id="L37">    public GridRenderer(int gridSize, int subdivisions) {</span>
+<span class="nc" id="L38">        this.gridSize = gridSize;</span>
+<span class="nc" id="L39">        this.subdivisions = subdivisions;</span>
+<span class="nc" id="L40">    }</span>
+
+    /** Creates a default grid: size 10, 20 subdivisions (0.5 unit spacing). */
+    public GridRenderer() {
+<span class="nc" id="L44">        this(10, 20);</span>
+<span class="nc" id="L45">    }</span>
+
+    /**
+     * Initializes OpenGL buffers for the grid and axes.
+     * Must be called once after an OpenGL context is current.
+     */
+    public void init() {
+<span class="nc" id="L52">        buildGrid();</span>
+<span class="nc" id="L53">        buildAxes();</span>
+<span class="nc" id="L54">        initialized = true;</span>
+<span class="nc" id="L55">        log.info(&quot;GridRenderer initialized ({} grid vertices, {} axis vertices)&quot;,</span>
+<span class="nc" id="L56">                gridVertexCount, axisVertexCount);</span>
+<span class="nc" id="L57">    }</span>
+
+    /**
+     * Renders the grid and axes using the given view-projection matrix.
+     *
+     * @param vpMatrix column-major 4x4 view-projection matrix
+     */
+    public void render(float[] vpMatrix) {
+<span class="nc bnc" id="L65" title="All 2 branches missed.">        if (!initialized) return;</span>
+
+<span class="nc" id="L67">        glEnable(GL_DEPTH_TEST);</span>
+
+        // --- Grid ---
+<span class="nc" id="L70">        glBindVertexArray(gridVao);</span>
+<span class="nc" id="L71">        glDrawArrays(GL_LINES, 0, gridVertexCount);</span>
+<span class="nc" id="L72">        glBindVertexArray(0);</span>
+
+        // --- Axes ---
+<span class="nc" id="L75">        glBindVertexArray(axisVao);</span>
+<span class="nc" id="L76">        glDrawArrays(GL_LINES, 0, axisVertexCount);</span>
+<span class="nc" id="L77">        glBindVertexArray(0);</span>
+<span class="nc" id="L78">    }</span>
+
+    /**
+     * Releases GPU resources.
+     */
+    public void cleanup() {
+<span class="nc bnc" id="L84" title="All 2 branches missed.">        if (initialized) {</span>
+<span class="nc" id="L85">            glDeleteVertexArrays(gridVao);</span>
+<span class="nc" id="L86">            glDeleteBuffers(gridVbo);</span>
+<span class="nc" id="L87">            glDeleteVertexArrays(axisVao);</span>
+<span class="nc" id="L88">            glDeleteBuffers(axisVbo);</span>
+<span class="nc" id="L89">            initialized = false;</span>
+<span class="nc" id="L90">            log.info(&quot;GridRenderer cleaned up&quot;);</span>
+        }
+<span class="nc" id="L92">    }</span>
+
+    // ---------------------------------------------------------------
+    // Grid construction
+    // ---------------------------------------------------------------
+
+    private void buildGrid() {
+<span class="nc" id="L99">        float half = gridSize;</span>
+<span class="nc" id="L100">        float step = 2f * gridSize / subdivisions;</span>
+<span class="nc" id="L101">        List&lt;Float&gt; vertices = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L103" title="All 2 branches missed.">        for (int i = 0; i &lt;= subdivisions; i++) {</span>
+<span class="nc" id="L104">            float pos = -half + i * step;</span>
+            // Line parallel to X
+<span class="nc" id="L106">            vertices.add(pos);</span>
+<span class="nc" id="L107">            vertices.add(0f);</span>
+<span class="nc" id="L108">            vertices.add(-half);</span>
+<span class="nc" id="L109">            vertices.add(pos);</span>
+<span class="nc" id="L110">            vertices.add(0f);</span>
+<span class="nc" id="L111">            vertices.add(half);</span>
+            // Line parallel to Z
+<span class="nc" id="L113">            vertices.add(-half);</span>
+<span class="nc" id="L114">            vertices.add(0f);</span>
+<span class="nc" id="L115">            vertices.add(pos);</span>
+<span class="nc" id="L116">            vertices.add(half);</span>
+<span class="nc" id="L117">            vertices.add(0f);</span>
+<span class="nc" id="L118">            vertices.add(pos);</span>
+        }
+
+<span class="nc" id="L121">        float[] data = toFloatArray(vertices);</span>
+<span class="nc" id="L122">        gridVertexCount = vertices.size() / 6;</span>
+
+<span class="nc" id="L124">        int[] vao = new int[1];</span>
+<span class="nc" id="L125">        int[] vbo = new int[1];</span>
+<span class="nc" id="L126">        glGenVertexArrays(vao);</span>
+<span class="nc" id="L127">        glGenBuffers(vbo);</span>
+
+<span class="nc" id="L129">        gridVao = vao[0];</span>
+<span class="nc" id="L130">        gridVbo = vbo[0];</span>
+
+<span class="nc" id="L132">        glBindVertexArray(gridVao);</span>
+<span class="nc" id="L133">        glBindBuffer(GL_ARRAY_BUFFER, gridVbo);</span>
+<span class="nc" id="L134">        glBufferData(GL_ARRAY_BUFFER, data, GL_STATIC_DRAW);</span>
+<span class="nc" id="L135">        glVertexAttribPointer(0, 3, GL_FLOAT, false, 3 * Float.BYTES, 0);</span>
+<span class="nc" id="L136">        glEnableVertexAttribArray(0);</span>
+<span class="nc" id="L137">        glBindVertexArray(0);</span>
+<span class="nc" id="L138">    }</span>
+
+    private void buildAxes() {
+        // Axis lines: X (red), Y (green), Z (blue), each from origin to axisLength
+<span class="nc" id="L142">        float axisLength = gridSize + 1f;</span>
+<span class="nc" id="L143">        List&lt;Float&gt; verts = new ArrayList&lt;&gt;();</span>
+
+        // X axis: origin to (axisLength, 0, 0)
+<span class="nc" id="L146">        verts.add(0f); verts.add(0f); verts.add(0f);</span>
+<span class="nc" id="L147">        verts.add(1f); verts.add(0f); verts.add(0f); // color</span>
+<span class="nc" id="L148">        verts.add(axisLength); verts.add(0f); verts.add(0f);</span>
+<span class="nc" id="L149">        verts.add(1f); verts.add(0f); verts.add(0f);</span>
+
+        // Y axis
+<span class="nc" id="L152">        verts.add(0f); verts.add(0f); verts.add(0f);</span>
+<span class="nc" id="L153">        verts.add(0f); verts.add(1f); verts.add(0f);</span>
+<span class="nc" id="L154">        verts.add(0f); verts.add(axisLength); verts.add(0f);</span>
+<span class="nc" id="L155">        verts.add(0f); verts.add(1f); verts.add(0f);</span>
+
+        // Z axis
+<span class="nc" id="L158">        verts.add(0f); verts.add(0f); verts.add(0f);</span>
+<span class="nc" id="L159">        verts.add(0f); verts.add(0f); verts.add(1f);</span>
+<span class="nc" id="L160">        verts.add(0f); verts.add(0f); verts.add(axisLength);</span>
+<span class="nc" id="L161">        verts.add(0f); verts.add(0f); verts.add(1f);</span>
+
+<span class="nc" id="L163">        float[] data = toFloatArray(verts);</span>
+<span class="nc" id="L164">        axisVertexCount = 6; // 6 vertices (3 lines × 2)</span>
+
+<span class="nc" id="L166">        int[] vao = new int[1];</span>
+<span class="nc" id="L167">        int[] vbo = new int[1];</span>
+<span class="nc" id="L168">        glGenVertexArrays(vao);</span>
+<span class="nc" id="L169">        glGenBuffers(vbo);</span>
+
+<span class="nc" id="L171">        axisVao = vao[0];</span>
+<span class="nc" id="L172">        axisVbo = vbo[0];</span>
+
+<span class="nc" id="L174">        glBindVertexArray(axisVao);</span>
+<span class="nc" id="L175">        glBindBuffer(GL_ARRAY_BUFFER, axisVbo);</span>
+<span class="nc" id="L176">        glBufferData(GL_ARRAY_BUFFER, data, GL_STATIC_DRAW);</span>
+        // position attribute (location 0): 3 floats
+<span class="nc" id="L178">        glVertexAttribPointer(0, 3, GL_FLOAT, false, 6 * Float.BYTES, 0);</span>
+<span class="nc" id="L179">        glEnableVertexAttribArray(0);</span>
+        // color attribute (location 1): 3 floats
+<span class="nc" id="L181">        glVertexAttribPointer(1, 3, GL_FLOAT, false, 6 * Float.BYTES, 3 * Float.BYTES);</span>
+<span class="nc" id="L182">        glEnableVertexAttribArray(1);</span>
+<span class="nc" id="L183">        glBindVertexArray(0);</span>
+<span class="nc" id="L184">    }</span>
+
+    private static float[] toFloatArray(List&lt;Float&gt; list) {
+<span class="nc" id="L187">        float[] arr = new float[list.size()];</span>
+<span class="nc bnc" id="L188" title="All 2 branches missed.">        for (int i = 0; i &lt; list.size(); i++) {</span>
+<span class="nc" id="L189">            arr[i] = list.get(i);</span>
+        }
+<span class="nc" id="L191">        return arr;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

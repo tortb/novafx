@@ -1,0 +1,6 @@
+com/novafx/export/NfxzExporter.class
+com/novafx/export/Exporter.class
+com/novafx/export/JsonExporter.class
+com/novafx/export/CsvExporter.class
+com/novafx/export/JsonExporter$PointJson.class
+com/novafx/export/McFunctionExporter.class

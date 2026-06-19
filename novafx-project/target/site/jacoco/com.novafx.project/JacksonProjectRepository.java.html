@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JacksonProjectRepository.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">NovaFX Project</a> &gt; <a href="index.source.html" class="el_package">com.novafx.project</a> &gt; <span class="el_source">JacksonProjectRepository.java</span></div><h1>JacksonProjectRepository.java</h1><pre class="source lang-java linenums">package com.novafx.project;
+
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
+import com.novafx.core.domain.PlatformService;
+import com.novafx.core.domain.Project;
+import com.novafx.math.FunctionDefinition;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+/**
+ * Jackson-backed {@link ProjectRepository} that persists projects as
+ * {@code .nfx} JSON files.
+ * &lt;p&gt;
+ * Files are stored in {@code workspace/projects} under the platform-specific
+ * data directory. Each file is named {@code &lt;uuid&gt;.nfx}.
+ */
+public final class JacksonProjectRepository implements ProjectRepository {
+
+<span class="fc" id="L32">    private static final Logger log = LoggerFactory.getLogger(JacksonProjectRepository.class);</span>
+    private static final String FILE_SUFFIX = &quot;.nfx&quot;;
+    private static final String FILE_VERSION = &quot;1.0&quot;;
+
+    private final Path storageDir;
+    private final ObjectMapper mapper;
+
+    /**
+     * Constructs a repository using the given platform service for
+     * path resolution.
+     *
+     * @param platformService platform-specific path provider
+     */
+<span class="nc" id="L45">    public JacksonProjectRepository(PlatformService platformService) {</span>
+<span class="nc" id="L46">        this.storageDir = platformService.workspaceDirectory();</span>
+<span class="nc" id="L47">        this.mapper = JsonMapper.builder()</span>
+<span class="nc" id="L48">                .findAndAddModules()</span>
+<span class="nc" id="L49">                .enable(SerializationFeature.INDENT_OUTPUT)</span>
+<span class="nc" id="L50">                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)</span>
+<span class="nc" id="L51">                .build();</span>
+<span class="nc" id="L52">        ensureDirectoryExists();</span>
+<span class="nc" id="L53">    }</span>
+
+    /**
+     * Constructs a repository with an explicit storage directory
+     * (useful for testing).
+     *
+     * @param storageDir directory to store .nfx files
+     */
+<span class="fc" id="L61">    JacksonProjectRepository(Path storageDir) {</span>
+<span class="fc" id="L62">        this.storageDir = storageDir;</span>
+<span class="fc" id="L63">        this.mapper = JsonMapper.builder()</span>
+<span class="fc" id="L64">                .findAndAddModules()</span>
+<span class="fc" id="L65">                .enable(SerializationFeature.INDENT_OUTPUT)</span>
+<span class="fc" id="L66">                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)</span>
+<span class="fc" id="L67">                .build();</span>
+<span class="fc" id="L68">        ensureDirectoryExists();</span>
+<span class="fc" id="L69">    }</span>
+
+    @Override
+    public void save(Project project) {
+<span class="fc" id="L73">        var fileData = new NovaFxProjectFile(</span>
+                FILE_VERSION,
+<span class="fc" id="L75">                project.id(),</span>
+<span class="fc" id="L76">                project.name(),</span>
+<span class="fc" id="L77">                project.description(),</span>
+<span class="fc" id="L78">                project.createdAt(),</span>
+<span class="fc" id="L79">                project.updatedAt(),</span>
+<span class="fc" id="L80">                NovaFxProjectFile.FunctionData.from(project.functionDefinition())</span>
+        );
+<span class="fc" id="L82">        Path filePath = resolvePath(project.id());</span>
+        try {
+<span class="fc" id="L84">            mapper.writeValue(filePath.toFile(), fileData);</span>
+<span class="fc" id="L85">            log.debug(&quot;Saved project {} to {}&quot;, project.id(), filePath);</span>
+<span class="fc" id="L86">        } catch (IOException e) {</span>
+<span class="fc" id="L87">            throw new RuntimeException(&quot;Failed to save project &quot; + project.id(), e);</span>
+<span class="fc" id="L88">        }</span>
+<span class="fc" id="L89">    }</span>
+
+    @Override
+    public Optional&lt;Project&gt; findById(UUID id) {
+<span class="fc" id="L93">        Path filePath = resolvePath(id);</span>
+<span class="fc bfc" id="L94" title="All 2 branches covered.">        if (!Files.exists(filePath)) {</span>
+<span class="fc" id="L95">            return Optional.empty();</span>
+        }
+<span class="fc" id="L97">        return Optional.ofNullable(readFile(filePath));</span>
+    }
+
+    @Override
+    public List&lt;Project&gt; findAll() {
+<span class="fc" id="L102">        List&lt;Project&gt; projects = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L103">        try (DirectoryStream&lt;Path&gt; stream = Files.newDirectoryStream(storageDir, &quot;*&quot; + FILE_SUFFIX)) {</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">            for (Path path : stream) {</span>
+<span class="fc" id="L105">                Project p = readFile(path);</span>
+<span class="pc bpc" id="L106" title="1 of 2 branches missed.">                if (p != null) {</span>
+<span class="fc" id="L107">                    projects.add(p);</span>
+                }
+<span class="fc" id="L109">            }</span>
+<span class="nc" id="L110">        } catch (IOException e) {</span>
+<span class="nc" id="L111">            log.warn(&quot;Failed to list projects in {}&quot;, storageDir, e);</span>
+<span class="fc" id="L112">        }</span>
+<span class="fc" id="L113">        return List.copyOf(projects);</span>
+    }
+
+    @Override
+    public boolean deleteById(UUID id) {
+<span class="fc" id="L118">        Path filePath = resolvePath(id);</span>
+        try {
+<span class="fc" id="L120">            boolean deleted = Files.deleteIfExists(filePath);</span>
+<span class="fc bfc" id="L121" title="All 2 branches covered.">            if (deleted) {</span>
+<span class="fc" id="L122">                log.debug(&quot;Deleted project {}&quot;, id);</span>
+            }
+<span class="fc" id="L124">            return deleted;</span>
+<span class="nc" id="L125">        } catch (IOException e) {</span>
+<span class="nc" id="L126">            throw new RuntimeException(&quot;Failed to delete project &quot; + id, e);</span>
+        }
+    }
+
+    @Override
+    public long count() {
+<span class="fc" id="L132">        return findAll().size();</span>
+    }
+
+    // ---------------------------------------------------------------
+    // Internal helpers
+    // ---------------------------------------------------------------
+
+    private Path resolvePath(UUID id) {
+<span class="fc" id="L140">        return storageDir.resolve(id.toString() + FILE_SUFFIX);</span>
+    }
+
+    private Project readFile(Path path) {
+        try {
+<span class="fc" id="L145">            NovaFxProjectFile fileData = mapper.readValue(path.toFile(), NovaFxProjectFile.class);</span>
+<span class="fc" id="L146">            FunctionDefinition funcDef = fileData.function().toFunctionDefinition();</span>
+<span class="fc" id="L147">            return new Project(</span>
+<span class="fc" id="L148">                    fileData.id(),</span>
+<span class="fc" id="L149">                    fileData.name(),</span>
+<span class="fc" id="L150">                    fileData.description(),</span>
+                    funcDef,
+<span class="fc" id="L152">                    fileData.createdAt(),</span>
+<span class="fc" id="L153">                    fileData.updatedAt()</span>
+            );
+<span class="nc" id="L155">        } catch (IOException e) {</span>
+<span class="nc" id="L156">            log.warn(&quot;Failed to read project file {}: {}&quot;, path, e.getMessage());</span>
+<span class="nc" id="L157">            return null;</span>
+        }
+    }
+
+    private void ensureDirectoryExists() {
+        try {
+<span class="fc" id="L163">            Files.createDirectories(storageDir);</span>
+<span class="nc" id="L164">        } catch (IOException e) {</span>
+<span class="nc" id="L165">            throw new RuntimeException(&quot;Failed to create storage directory: &quot; + storageDir, e);</span>
+<span class="fc" id="L166">        }</span>
+<span class="fc" id="L167">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

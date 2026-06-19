@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MainWindow.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">NovaFX UI</a> &gt; <a href="index.source.html" class="el_package">com.novafx.ui.view</a> &gt; <span class="el_source">MainWindow.java</span></div><h1>MainWindow.java</h1><pre class="source lang-java linenums">package com.novafx.ui.view;
+
+import com.novafx.math.FunctionDefinition;
+import com.novafx.math.MathPresets;
+import com.novafx.ui.controller.MainController;
+import javafx.application.Platform;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
+import javafx.stage.Stage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
+
+/**
+ * The main application window containing the entire NovaFX UI layout.
+ * &lt;p&gt;
+ * Layout:
+ * &lt;pre&gt;
+ * ┌────────────────────────────┐
+ * │ MenuBar                    │
+ * ├───────┬────────────────────┤
+ * │       │                    │
+ * │Preset │     Viewport       │
+ * │Panel  │                    │
+ * │       │                    │
+ * ├───────┴────────────────────┤
+ * │ Function Editor            │
+ * ├────────────────────────────┤
+ * │ Property Panel             │
+ * └────────────────────────────┘
+ * &lt;/pre&gt;
+ */
+public final class MainWindow {
+
+<span class="nc" id="L39">    private static final Logger log = LoggerFactory.getLogger(MainWindow.class);</span>
+    private static final int WIDTH = 1200;
+    private static final int HEIGHT = 800;
+
+    private final Stage stage;
+    private final MainController controller;
+
+    private final ViewportCanvas viewportCanvas;
+    private final FunctionEditor functionEditor;
+    private final PropertyPanel propertyPanel;
+    private final PresetPanel presetPanel;
+
+    /**
+     * Creates the main window on the given stage.
+     *
+     * @param stage the primary stage
+     */
+<span class="nc" id="L56">    public MainWindow(Stage stage) {</span>
+<span class="nc" id="L57">        this.stage = stage;</span>
+<span class="nc" id="L58">        this.controller = new MainController();</span>
+
+        // Create UI components
+<span class="nc" id="L61">        this.viewportCanvas = new ViewportCanvas(WIDTH * 0.7, HEIGHT * 0.55);</span>
+<span class="nc" id="L62">        this.functionEditor = new FunctionEditor();</span>
+<span class="nc" id="L63">        this.propertyPanel = new PropertyPanel();</span>
+<span class="nc" id="L64">        this.presetPanel = new PresetPanel(controller.getPresetNames());</span>
+
+        // Build layout
+<span class="nc" id="L67">        BorderPane root = buildLayout();</span>
+<span class="nc" id="L68">        Scene scene = new Scene(root, WIDTH, HEIGHT);</span>
+
+<span class="nc" id="L70">        stage.setTitle(&quot;NovaFX Studio — Mathematical Particle Editor&quot;);</span>
+<span class="nc" id="L71">        stage.setScene(scene);</span>
+<span class="nc" id="L72">        stage.setMinWidth(800);</span>
+<span class="nc" id="L73">        stage.setMinHeight(600);</span>
+
+        // Wire up controller
+<span class="nc" id="L76">        setupBindings();</span>
+
+        // Load initial preset
+<span class="nc" id="L79">        controller.applyPreset(&quot;Spiral&quot;);</span>
+<span class="nc" id="L80">        functionEditor.loadDefinition(controller.getCurrentDefinition());</span>
+
+<span class="nc" id="L82">        stage.show();</span>
+<span class="nc" id="L83">        log.info(&quot;MainWindow opened&quot;);</span>
+<span class="nc" id="L84">    }</span>
+
+    private BorderPane buildLayout() {
+<span class="nc" id="L87">        BorderPane root = new BorderPane();</span>
+
+        // Menu bar
+<span class="nc" id="L90">        root.setTop(buildMenuBar());</span>
+
+        // Center: viewport
+<span class="nc" id="L93">        root.setCenter(viewportCanvas);</span>
+
+        // Left: presets
+<span class="nc" id="L96">        root.setLeft(presetPanel);</span>
+
+        // Bottom: function editor + properties
+<span class="nc" id="L99">        VBox bottom = new VBox(functionEditor, propertyPanel);</span>
+<span class="nc" id="L100">        root.setBottom(bottom);</span>
+
+<span class="nc" id="L102">        return root;</span>
+    }
+
+    private MenuBar buildMenuBar() {
+<span class="nc" id="L106">        MenuBar menuBar = new MenuBar();</span>
+
+        // File menu
+<span class="nc" id="L109">        Menu fileMenu = new Menu(&quot;File&quot;);</span>
+<span class="nc" id="L110">        MenuItem newProject = new MenuItem(&quot;New&quot;);</span>
+<span class="nc" id="L111">        newProject.setOnAction(e -&gt; controller.newProject());</span>
+<span class="nc" id="L112">        MenuItem saveItem = new MenuItem(&quot;Save&quot;);</span>
+<span class="nc" id="L113">        saveItem.setOnAction(e -&gt; controller.saveProject());</span>
+<span class="nc" id="L114">        MenuItem openItem = new MenuItem(&quot;Open...&quot;);</span>
+<span class="nc" id="L115">        openItem.setOnAction(e -&gt; {</span>
+            // TODO: file chooser for .nfx files
+<span class="nc" id="L117">        });</span>
+<span class="nc" id="L118">        MenuItem exitItem = new MenuItem(&quot;Exit&quot;);</span>
+<span class="nc" id="L119">        exitItem.setOnAction(e -&gt; Platform.exit());</span>
+
+<span class="nc" id="L121">        Menu exportMenu = new Menu(&quot;Export&quot;);</span>
+<span class="nc" id="L122">        MenuItem exportCsv = new MenuItem(&quot;CSV...&quot;);</span>
+<span class="nc" id="L123">        exportCsv.setOnAction(e -&gt; handleExport(&quot;CSV Files (*.csv)&quot;, &quot;*.csv&quot;, controller::exportCsv));</span>
+<span class="nc" id="L124">        MenuItem exportJson = new MenuItem(&quot;JSON...&quot;);</span>
+<span class="nc" id="L125">        exportJson.setOnAction(e -&gt; handleExport(&quot;JSON Files (*.json)&quot;, &quot;*.json&quot;, controller::exportJson));</span>
+<span class="nc" id="L126">        MenuItem exportMc = new MenuItem(&quot;MCFunction...&quot;);</span>
+<span class="nc" id="L127">        exportMc.setOnAction(e -&gt; handleExport(&quot;MCFunction Files (*.mcfunction)&quot;, &quot;*.mcfunction&quot;, controller::exportMcFunction));</span>
+
+<span class="nc" id="L129">        exportMenu.getItems().addAll(exportCsv, exportJson, exportMc);</span>
+<span class="nc" id="L130">        fileMenu.getItems().addAll(newProject, saveItem, openItem, new SeparatorMenuItem(), exportMenu, new SeparatorMenuItem(), exitItem);</span>
+
+        // View menu
+<span class="nc" id="L133">        Menu viewMenu = new Menu(&quot;View&quot;);</span>
+<span class="nc" id="L134">        MenuItem resetCamera = new MenuItem(&quot;Reset Camera&quot;);</span>
+<span class="nc" id="L135">        resetCamera.setOnAction(e -&gt; viewportCanvas.resetCamera());</span>
+<span class="nc" id="L136">        viewMenu.getItems().add(resetCamera);</span>
+
+        // Help menu
+<span class="nc" id="L139">        Menu helpMenu = new Menu(&quot;Help&quot;);</span>
+<span class="nc" id="L140">        MenuItem aboutItem = new MenuItem(&quot;About NovaFX Studio&quot;);</span>
+<span class="nc" id="L141">        aboutItem.setOnAction(e -&gt; {</span>
+<span class="nc" id="L142">            Alert alert = new Alert(Alert.AlertType.INFORMATION);</span>
+<span class="nc" id="L143">            alert.setTitle(&quot;About NovaFX Studio&quot;);</span>
+<span class="nc" id="L144">            alert.setContentText(&quot;NovaFX Studio v1.0\nMathematical Particle Editor for Minecraft&quot;);</span>
+<span class="nc" id="L145">            alert.show();</span>
+<span class="nc" id="L146">        });</span>
+<span class="nc" id="L147">        helpMenu.getItems().add(aboutItem);</span>
+
+<span class="nc" id="L149">        menuBar.getMenus().addAll(fileMenu, viewMenu, helpMenu);</span>
+<span class="nc" id="L150">        return menuBar;</span>
+    }
+
+    private void setupBindings() {
+        // When user selects a preset
+<span class="nc" id="L155">        presetPanel.setOnPresetSelected(name -&gt; {</span>
+<span class="nc" id="L156">            FunctionDefinition def = controller.applyPreset(name);</span>
+<span class="nc" id="L157">            functionEditor.loadDefinition(def);</span>
+<span class="nc" id="L158">            viewportCanvas.setPoints(controller.getCurrentPoints());</span>
+<span class="nc" id="L159">        });</span>
+
+        // When user edits the function
+<span class="nc" id="L162">        functionEditor.setOnFunctionChanged(def -&gt; {</span>
+<span class="nc" id="L163">            controller.updateFunction(</span>
+<span class="nc" id="L164">                    def.xExpression(), def.yExpression(), def.zExpression(),</span>
+<span class="nc" id="L165">                    def.start(), def.end(), def.step()</span>
+            );
+<span class="nc" id="L167">        });</span>
+
+        // When points are resampled
+<span class="nc" id="L170">        controller.setOnPointsChanged(() -&gt;</span>
+<span class="nc" id="L171">                Platform.runLater(() -&gt;</span>
+<span class="nc" id="L172">                        viewportCanvas.setPoints(controller.getCurrentPoints())</span>
+                )
+        );
+
+        // Property panel bindings
+<span class="nc" id="L177">        propertyPanel.setOnPointSizeChanged(size -&gt;</span>
+<span class="nc" id="L178">                viewportCanvas.setPointRadius(size)</span>
+        );
+<span class="nc" id="L180">        propertyPanel.setOnPointColorChanged(color -&gt;</span>
+<span class="nc" id="L181">                viewportCanvas.setPointColor(color)</span>
+        );
+<span class="nc" id="L183">        propertyPanel.setOnShowGridChanged(show -&gt;</span>
+<span class="nc" id="L184">                viewportCanvas.setShowGrid(show)</span>
+        );
+<span class="nc" id="L186">    }</span>
+
+    @FunctionalInterface
+    private interface ExportConsumer {
+        void accept(java.nio.file.Path path);
+    }
+
+    private void handleExport(String description, String extension, ExportConsumer exporter) {
+<span class="nc" id="L194">        FileChooser chooser = new FileChooser();</span>
+<span class="nc" id="L195">        chooser.setTitle(&quot;Export&quot;);</span>
+<span class="nc" id="L196">        chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(description, extension));</span>
+<span class="nc" id="L197">        File file = chooser.showSaveDialog(stage);</span>
+<span class="nc bnc" id="L198" title="All 2 branches missed.">        if (file != null) {</span>
+<span class="nc" id="L199">            exporter.accept(file.toPath());</span>
+        }
+<span class="nc" id="L201">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

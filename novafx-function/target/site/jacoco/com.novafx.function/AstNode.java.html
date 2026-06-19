@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AstNode.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">NovaFX Function AST</a> &gt; <a href="index.source.html" class="el_package">com.novafx.function</a> &gt; <span class="el_source">AstNode.java</span></div><h1>AstNode.java</h1><pre class="source lang-java linenums">package com.novafx.function;
+
+import java.util.List;
+
+/**
+ * Root type of the NovaFX expression AST (Abstract Syntax Tree).
+ * &lt;p&gt;
+ * A parsed mathematical expression is represented as a tree of {@code AstNode}
+ * instances. The sealed hierarchy ensures exhaustive pattern matching in
+ * Java 25 {@code switch} expressions.
+ * &lt;p&gt;
+ * Node types:
+ * &lt;ul&gt;
+ *   &lt;li&gt;{@link ConstantNode} — literal numbers (e.g. {@code 42}, {@code 3.14})&lt;/li&gt;
+ *   &lt;li&gt;{@link VariableNode} — named variables (e.g. {@code t}, {@code a})&lt;/li&gt;
+ *   &lt;li&gt;{@link UnaryNode} — unary operations ({@code -x})&lt;/li&gt;
+ *   &lt;li&gt;{@link BinaryNode} — binary operations ({@code a+b})&lt;/li&gt;
+ *   &lt;li&gt;{@link FunctionNode} — function calls ({@code sin(t)}, {@code max(a,b)})&lt;/li&gt;
+ * &lt;/ul&gt;
+ */
+public sealed interface AstNode {
+
+    /**
+     * A literal numeric constant.
+     *
+     * @param value the constant value as a primitive double
+     */
+<span class="fc" id="L28">    record ConstantNode(double value) implements AstNode {}</span>
+
+    /**
+     * A named variable reference.
+     *
+     * @param name the variable name (e.g. &quot;t&quot;, &quot;a&quot;, &quot;PI&quot;)
+     */
+<span class="fc" id="L35">    record VariableNode(String name) implements AstNode {}</span>
+
+    /**
+     * A unary operation applied to a single operand.
+     *
+     * @param operand the inner expression
+     * @param op      the unary operator
+     */
+<span class="fc" id="L43">    record UnaryNode(AstNode operand, UnaryOp op) implements AstNode {}</span>
+
+    /**
+     * A binary operation applied to two operands.
+     *
+     * @param left  the left-hand side expression
+     * @param right the right-hand side expression
+     * @param op    the binary operator
+     */
+<span class="fc" id="L52">    record BinaryNode(AstNode left, AstNode right, BinaryOp op) implements AstNode {}</span>
+
+    /**
+     * A function call with a name and zero or more arguments.
+     *
+     * @param name      the function name (e.g. &quot;sin&quot;, &quot;pow&quot;)
+     * @param arguments the argument expressions
+     */
+<span class="fc" id="L60">    record FunctionNode(String name, List&lt;AstNode&gt; arguments) implements AstNode {}</span>
+
+    // ---------------------------------------------------------------
+    // Operator enums
+    // ---------------------------------------------------------------
+
+    /** Binary arithmetic operators in order of increasing precedence. */
+<span class="fc" id="L67">    enum BinaryOp {</span>
+<span class="fc" id="L68">        ADD,</span>
+<span class="fc" id="L69">        SUB,</span>
+<span class="fc" id="L70">        MUL,</span>
+<span class="fc" id="L71">        DIV,</span>
+<span class="fc" id="L72">        POW</span>
+    }
+
+    /** Unary operators. */
+<span class="fc" id="L76">    enum UnaryOp {</span>
+        /** Arithmetic negation ({@code -x}). */
+<span class="fc" id="L78">        NEG,</span>
+        /** Absolute value ({@code abs(x)} — produced by the parser for the abs function or implicit). */
+<span class="fc" id="L80">        ABS</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

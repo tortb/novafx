@@ -1,0 +1,13 @@
+com/novafx/ui/view/MainWindow.class
+com/novafx/ui/view/ParameterPanel$ParameterSlider.class
+com/novafx/ui/view/CompletionPopup$1.class
+com/novafx/ui/view/PropertyPanel.class
+com/novafx/ui/view/ParameterPanel.class
+com/novafx/ui/view/CanvasViewport.class
+com/novafx/ui/view/PresetPanel.class
+com/novafx/ui/view/CompletionPopup.class
+com/novafx/ui/view/ViewportCanvas.class
+com/novafx/ui/view/FunctionEditor.class
+com/novafx/ui/view/CompletionPopup$CompletionCell.class
+com/novafx/ui/controller/MainController.class
+com/novafx/ui/view/CanvasViewport$1.class

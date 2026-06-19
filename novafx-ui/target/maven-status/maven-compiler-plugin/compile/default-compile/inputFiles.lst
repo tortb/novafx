@@ -1,0 +1,9 @@
+/home/tortb/claude-code/novafx/novafx-ui/src/main/java/com/novafx/ui/controller/MainController.java
+/home/tortb/claude-code/novafx/novafx-ui/src/main/java/com/novafx/ui/view/CanvasViewport.java
+/home/tortb/claude-code/novafx/novafx-ui/src/main/java/com/novafx/ui/view/CompletionPopup.java
+/home/tortb/claude-code/novafx/novafx-ui/src/main/java/com/novafx/ui/view/FunctionEditor.java
+/home/tortb/claude-code/novafx/novafx-ui/src/main/java/com/novafx/ui/view/MainWindow.java
+/home/tortb/claude-code/novafx/novafx-ui/src/main/java/com/novafx/ui/view/ParameterPanel.java
+/home/tortb/claude-code/novafx/novafx-ui/src/main/java/com/novafx/ui/view/PresetPanel.java
+/home/tortb/claude-code/novafx/novafx-ui/src/main/java/com/novafx/ui/view/PropertyPanel.java
+/home/tortb/claude-code/novafx/novafx-ui/src/main/java/com/novafx/ui/view/ViewportCanvas.java
