@@ -1,18 +1,19 @@
 /* ═══════════════════════════════════════════════
-   NovaFX Studio — Dark Theme
-   Colors:  BG #0A0A0A  Panel #111111  Border #262626
-            Text #FFF  TextSec #A1A1AA  Accent #F97316
+   NovaFX Studio — 暗色主题
+   配色:  BG #0A0A0A  面板 #111111  边框 #262626
+         文字 #FFF  次级文字 #A1A1AA  强调色 #F97316
+   圆角 8px  按钮/输入框 36px  统一间距
    ═══════════════════════════════════════════════ */
 
-/* ── Root ──────────────────────────────────── */
+/* ── 根 ──────────────────────────────────── */
 .root {
     -fx-background-color: #0A0A0A;
-    -fx-font-family: "Microsoft YaHei UI", "Noto Sans SC", "PingFang SC", sans-serif;
+    -fx-font-family: "Microsoft YaHei UI", "Noto Sans SC", "PingFang SC", "Segoe UI", sans-serif;
     -fx-font-size: 13px;
     -fx-text-fill: #FFFFFF;
 }
 
-/* ── Menu Bar ──────────────────────────────── */
+/* ── 菜单栏 ──────────────────────────────── */
 .menu-bar {
     -fx-background-color: #0D0D0D;
     -fx-border-color: #1A1A1A;
@@ -22,7 +23,7 @@
 }
 
 .menu-bar .menu {
-    -fx-padding: 8 12;
+    -fx-padding: 8 14;
 }
 
 .menu-bar .menu:hover {
@@ -35,7 +36,7 @@
 }
 
 .menu-item {
-    -fx-padding: 6 20;
+    -fx-padding: 6 24;
 }
 
 .menu-item:hover {
@@ -51,14 +52,16 @@
     -fx-border-color: #262626;
     -fx-border-width: 1;
     -fx-padding: 6 0;
+    -fx-background-radius: 4;
+    -fx-border-radius: 4;
 }
 
-/* ── Labels ────────────────────────────────── */
+/* ── 标签 ────────────────────────────────── */
 .label {
     -fx-text-fill: #CCCCCC;
 }
 
-/* ── Text Fields ───────────────────────────── */
+/* ── 文本输入框 ──────────────────────────── */
 .text-field {
     -fx-background-color: #1A1A1A;
     -fx-border-color: #262626;
@@ -68,6 +71,8 @@
     -fx-prompt-text-fill: #555555;
     -fx-padding: 6 10;
     -fx-font-size: 13px;
+    -fx-min-height: 32px;
+    -fx-pref-height: 32px;
 }
 
 .text-field:focused {
@@ -75,7 +80,7 @@
     -fx-border-width: 1.5;
 }
 
-/* ── Buttons ───────────────────────────────── */
+/* ── 按钮 ────────────────────────────────── */
 .button {
     -fx-background-color: #1A1A1A;
     -fx-border-color: #262626;
@@ -85,6 +90,8 @@
     -fx-padding: 6 16;
     -fx-font-size: 13px;
     -fx-cursor: hand;
+    -fx-min-height: 32px;
+    -fx-pref-height: 32px;
 }
 
 .button:hover {
@@ -106,7 +113,7 @@
     -fx-background-color: #EA580C;
 }
 
-/* ── Sliders ───────────────────────────────── */
+/* ── 滑块 ───────────────────────────────── */
 .slider .track {
     -fx-background-color: #262626;
     -fx-background-radius: 2;
@@ -124,7 +131,7 @@
     -fx-background-color: #EA580C;
 }
 
-/* ── Color Picker ──────────────────────────── */
+/* ── 颜色选择器 ──────────────────────────── */
 .color-picker {
     -fx-background-color: #1A1A1A;
     -fx-border-color: #262626;
@@ -136,7 +143,7 @@
     -fx-text-fill: #CCCCCC;
 }
 
-/* ── Check Box ─────────────────────────────── */
+/* ── 复选框 ─────────────────────────────── */
 .check-box {
     -fx-text-fill: #CCCCCC;
 }
@@ -157,11 +164,13 @@
     -fx-background-color: #FFFFFF;
 }
 
-/* ── List View ─────────────────────────────── */
+/* ── 列表 ────────────────────────────────── */
 .list-view {
     -fx-background-color: #0A0A0A;
     -fx-border-color: #1A1A1A;
     -fx-border-width: 1;
+    -fx-background-radius: 4;
+    -fx-border-radius: 4;
 }
 
 .list-cell {
@@ -180,7 +189,7 @@
     -fx-background-color: #151515;
 }
 
-/* ── Scroll Bar ────────────────────────────── */
+/* ── 滚动条 ──────────────────────────────── */
 .scroll-bar {
     -fx-background-color: transparent;
     -fx-pref-width: 8;
@@ -201,11 +210,13 @@
     -fx-padding: 0;
 }
 
-/* ── Tab Pane ──────────────────────────────── */
+/* ── 标签面板 ────────────────────────────── */
 .tab-pane {
     -fx-background-color: #0A0A0A;
     -fx-border-color: #1A1A1A;
     -fx-border-width: 1;
+    -fx-background-radius: 4;
+    -fx-border-radius: 4;
 }
 
 .tab-pane .tab-header-area {
@@ -222,6 +233,7 @@
     -fx-border-color: #1A1A1A;
     -fx-border-width: 0 1 0 0;
     -fx-padding: 8 16;
+    -fx-min-height: 36px;
 }
 
 .tab:selected {
@@ -239,7 +251,7 @@
     -fx-text-fill: #FFFFFF;
 }
 
-/* ── Split Pane ────────────────────────────── */
+/* ── 分割面板 ────────────────────────────── */
 .split-pane {
     -fx-background-color: #0A0A0A;
     -fx-border-color: #1A1A1A;
@@ -247,19 +259,47 @@
 
 .split-pane .split-pane-divider {
     -fx-background-color: #1A1A1A;
-    -fx-pref-width: 1;
+    -fx-pref-width: 2;
 }
 
-/* ── Titled Pane ───────────────────────────── */
-.titled-pane {
+.split-pane .split-pane-divider:hover {
+    -fx-background-color: #F97316;
+}
+
+/* ── 滚动窗格 ────────────────────────────── */
+.scroll-pane {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.scroll-pane .viewport {
+    -fx-background-color: transparent;
+}
+
+/* ── 切换按钮（模式选择器） ────────────── */
+.toggle-button {
     -fx-background-color: #111111;
-    -fx-border-color: #1A1A1A;
+    -fx-border-color: #262626;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+    -fx-text-fill: #666;
+    -fx-font-size: 12;
+    -fx-padding: 6 16;
+    -fx-cursor: hand;
+    -fx-min-height: 32px;
 }
 
-.titled-pane .title {
-    -fx-background-color: #151515;
+.toggle-button:selected {
+    -fx-background-color: #F97316;
+    -fx-border-color: #F97316;
+    -fx-text-fill: #FFFFFF;
+    -fx-font-weight: bold;
 }
 
-.titled-pane .content {
-    -fx-background-color: #0A0A0A;
+.toggle-button:hover {
+    -fx-background-color: #1A1A1A;
+}
+
+.toggle-button:selected:hover {
+    -fx-background-color: #EA580C;
 }

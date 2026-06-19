@@ -23,21 +23,20 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Locale;
 
 /**
- * Main application window — NovaFX Studio.
+ * 主窗口 — NovaFX Studio。
  * <p>
- * Layout:
+ * 布局：
  * <pre>
  * ┌──────────────────────────────────────────────────┐
- * │ Menu Bar                                          │
+ * │ 菜单栏                                             │
  * ├────────┬──────────────────────┬──────────────────┤
- * │ Left    │                      │  Property Panel   │
- * │ Presets │     3D Viewport      │  Parameter Panel  │
- * │ (280px) │                      │                   │
+ * │ 预设    │                      │  属性面板          │
+ * │ (220px) │     3D 视口          │  参数面板          │
+ * │         │                      │                   │
  * ├────────┴──────────────────────┴──────────────────┤
- * │ Function Editor                                   │
+ * │ 函数编辑器（简易 / 专业 / LaTeX）                    │
  * └──────────────────────────────────────────────────┘
  * </pre>
  */
@@ -56,7 +55,9 @@ public final class MainWindow {
     private final PresetPanel presetPanel;
     private final ParameterPanel parameterPanel;
 
-    /** Creates the main window on the given stage. */
+    private final Label statusLabel = new Label();
+
+    /** 创建主窗口。 */
     public MainWindow(Stage stage) {
         this.stage = stage;
         this.controller = new MainController();
@@ -72,7 +73,6 @@ public final class MainWindow {
         BorderPane root = buildLayout();
         Scene scene = new Scene(root, WIDTH, HEIGHT);
 
-        // Apply theme CSS
         var cssUrl = getClass().getResource("/theme/novafx-dark.css");
         if (cssUrl != null) {
             scene.getStylesheets().add(cssUrl.toExternalForm());
@@ -95,44 +95,45 @@ public final class MainWindow {
     }
 
     // ---------------------------------------------------------------
-    // Layout
+    // 布局
     // ---------------------------------------------------------------
 
     private BorderPane buildLayout() {
         BorderPane root = new BorderPane();
 
-        // Top: menu bar
         root.setTop(buildMenuBar());
-
-        // Left: resource panel
         root.setLeft(presetPanel);
 
-        // Right: property tabs + parameters
-        VBox rightPanel = new VBox(propertyPanel, parameterPanel);
-        rightPanel.setPrefWidth(260);
+        VBox rightPanel = new VBox(0, propertyPanel, parameterPanel);
+        rightPanel.setPrefWidth(220);
         root.setRight(rightPanel);
 
-        // Center: vertical split between viewport and function editor
         SplitPane splitPane = new SplitPane();
         splitPane.setOrientation(Orientation.VERTICAL);
         splitPane.setStyle("-fx-background-color: #0A0A0A;");
-
         splitPane.getItems().addAll(canvasViewport, functionEditor);
         splitPane.setDividerPositions(0.75);
-
         root.setCenter(splitPane);
+
+        // 底部状态栏
+        HBox statusBar = new HBox(8);
+        statusBar.setStyle("-fx-background-color: #0D0D0D; -fx-border-color: #1A1A1A; -fx-border-width: 1 0 0 0;");
+        statusBar.setPadding(new javafx.geometry.Insets(2, 8, 2, 8));
+        statusLabel.setStyle("-fx-text-fill: #555; -fx-font-size: 10;");
+        statusBar.getChildren().add(statusLabel);
+        root.setBottom(statusBar);
 
         return root;
     }
 
     // ---------------------------------------------------------------
-    // Menu Bar
+    // 菜单栏
     // ---------------------------------------------------------------
 
     private MenuBar buildMenuBar() {
         MenuBar menuBar = new MenuBar();
 
-        // ── File ──
+        // ── 文件 ──
         Menu fileMenu = new Menu(I18n.get("menu.file"));
 
         MenuItem newItem = new MenuItem(I18n.get("menu.file.new"));
@@ -174,32 +175,24 @@ public final class MainWindow {
                 new SeparatorMenuItem(), exitItem
         );
 
-        // ── View ──
+        // ── 视图 ──
         Menu viewMenu = new Menu(I18n.get("menu.view"));
         MenuItem resetCam = new MenuItem(I18n.get("menu.view.resetCamera"));
         resetCam.setOnAction(e -> canvasViewport.resetCamera());
         viewMenu.getItems().add(resetCam);
 
-        // ── Language ──
-        Menu langMenu = new Menu(I18n.get("menu.language"));
-        MenuItem zhItem = new MenuItem(I18n.get("menu.language.zh"));
-        zhItem.setOnAction(e -> switchLanguage(Locale.SIMPLIFIED_CHINESE));
-        MenuItem enItem = new MenuItem(I18n.get("menu.language.en"));
-        enItem.setOnAction(e -> switchLanguage(Locale.ENGLISH));
-        langMenu.getItems().addAll(zhItem, enItem);
-
-        // ── Help ──
+        // ── 帮助 ──
         Menu helpMenu = new Menu(I18n.get("menu.help"));
         MenuItem aboutItem = new MenuItem(I18n.get("menu.help.about"));
         aboutItem.setOnAction(e -> showAbout());
         helpMenu.getItems().add(aboutItem);
 
-        menuBar.getMenus().addAll(fileMenu, viewMenu, langMenu, helpMenu);
+        menuBar.getMenus().addAll(fileMenu, viewMenu, helpMenu);
         return menuBar;
     }
 
     // ---------------------------------------------------------------
-    // Bindings
+    // 绑定
     // ---------------------------------------------------------------
 
     private void setupBindings() {
@@ -207,6 +200,7 @@ public final class MainWindow {
             FunctionDefinition def = controller.applyPreset(name);
             functionEditor.loadDefinition(def);
             canvasViewport.setPoints(controller.getCurrentPoints());
+            statusLabel.setText("预设: " + name);
         });
 
         presetPanel.setOnSaveCurrentAsPreset(() ->
@@ -220,10 +214,26 @@ public final class MainWindow {
             );
         });
 
+        // 即时错误反馈
+        functionEditor.setOnError(err -> {
+            Platform.runLater(() -> {
+                if (err != null && !err.isBlank()) {
+                    statusLabel.setText("⚠ " + err);
+                    statusLabel.setStyle("-fx-text-fill: #EF4444; -fx-font-size: 10;");
+                } else {
+                    statusLabel.setText("就绪");
+                    statusLabel.setStyle("-fx-text-fill: #555; -fx-font-size: 10;");
+                }
+            });
+        });
+
         controller.setOnPointsChanged(() ->
-                Platform.runLater(() ->
-                        canvasViewport.setPoints(controller.getCurrentPoints())
-                )
+                Platform.runLater(() -> {
+                    canvasViewport.setPoints(controller.getCurrentPoints());
+                    var pts = controller.getCurrentPoints();
+                    statusLabel.setText("点云: " + pts.size() + " 点");
+                    statusLabel.setStyle("-fx-text-fill: #555; -fx-font-size: 10;");
+                })
         );
 
         controller.setOnParametersChanged(() ->
@@ -253,20 +263,21 @@ public final class MainWindow {
     }
 
     // ---------------------------------------------------------------
-    // Keyboard shortcuts
+    // 键盘快捷键
     // ---------------------------------------------------------------
 
     private void setupKeyboard(Scene scene) {
+        // Ctrl+P 打开预设面板焦点
         scene.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
-            if (e.isControlDown() && e.isShiftDown() && e.getCode() == KeyCode.P) {
-                // Command palette — simplified
+            if (e.isControlDown() && e.getCode() == KeyCode.P) {
+                presetPanel.requestFocus();
                 e.consume();
             }
         });
     }
 
     // ---------------------------------------------------------------
-    // Drag-and-Drop
+    // 拖拽支持
     // ---------------------------------------------------------------
 
     private void setupDragDrop(Scene scene) {
@@ -300,8 +311,8 @@ public final class MainWindow {
                             success = true;
                         }
                     } catch (Exception ex) {
-                        log.error("Failed to open dropped file: {}", path, ex);
-                        showError("Failed to open: " + file.getName());
+                        log.error("打开拖入文件失败: {}", path, ex);
+                        showError("打开失败: " + file.getName());
                     }
                 }
             }
@@ -311,22 +322,24 @@ public final class MainWindow {
     }
 
     // ---------------------------------------------------------------
-    // File operations
+    // 文件操作
     // ---------------------------------------------------------------
 
     private void handleNew() {
         controller.newProject();
         functionEditor.loadDefinition(controller.getCurrentDefinition());
         canvasViewport.setPoints(controller.getCurrentPoints());
+        functionEditor.clearErrors();
+        statusLabel.setText("新建工程");
     }
 
     private void handleOpen() {
         FileChooser chooser = new FileChooser();
-        chooser.setTitle(I18n.get("menu.file.open"));
+        chooser.setTitle("打开工程");
         chooser.getExtensionFilters().add(
-                new FileChooser.ExtensionFilter("NovaFX Project (*.nfx)", "*.nfx"));
+                new FileChooser.ExtensionFilter("NovaFX 工程 (*.nfx)", "*.nfx"));
         chooser.getExtensionFilters().add(
-                new FileChooser.ExtensionFilter("All Files", "*.*"));
+                new FileChooser.ExtensionFilter("所有文件", "*.*"));
         File file = chooser.showOpenDialog(stage);
         if (file != null) {
             loadNfxFile(file.toPath());
@@ -336,6 +349,7 @@ public final class MainWindow {
     private void handleSave() {
         if (controller.getCurrentProjectPath() != null) {
             controller.saveProject();
+            statusLabel.setText("已保存");
         } else {
             handleSaveAs();
         }
@@ -344,10 +358,9 @@ public final class MainWindow {
     private void handleSaveAs() {
         if (controller.getCurrentProject() == null) return;
         FileChooser chooser = new FileChooser();
-        chooser.setTitle(I18n.get("menu.file.saveAs"));
+        chooser.setTitle("另存为");
         chooser.getExtensionFilters().add(
-                new FileChooser.ExtensionFilter("NovaFX Project (*.nfx)", "*.nfx"));
-        // Suggest the project name as default file name
+                new FileChooser.ExtensionFilter("NovaFX 工程 (*.nfx)", "*.nfx"));
         String initialName = controller.getCurrentProject().name()
                 .replaceAll("[^a-zA-Z0-9\\-_.]", "_") + ".nfx";
         chooser.setInitialFileName(initialName);
@@ -359,6 +372,7 @@ public final class MainWindow {
             }
             controller.saveProjectAs(path);
             updateTitle();
+            statusLabel.setText("已保存: " + path.getFileName());
         }
     }
 
@@ -367,9 +381,9 @@ public final class MainWindow {
         String initialName = controller.getCurrentProject().name()
                 .replaceAll("[^a-zA-Z0-9\\-_.]", "_") + ".nfxc";
         FileChooser chooser = new FileChooser();
-        chooser.setTitle(I18n.get("menu.file.compile"));
+        chooser.setTitle("编译工程");
         chooser.getExtensionFilters().add(
-                new FileChooser.ExtensionFilter("NovaFX Compiled (*.nfxc)", "*.nfxc"));
+                new FileChooser.ExtensionFilter("NovaFX 编译文件 (*.nfxc)", "*.nfxc"));
         chooser.setInitialFileName(initialName);
         File file = chooser.showSaveDialog(stage);
         if (file != null) {
@@ -378,18 +392,17 @@ public final class MainWindow {
                 path = path.resolveSibling(path.getFileName() + ".nfxc");
             }
             controller.compileProject(path);
+            statusLabel.setText("已编译: " + path.getFileName());
         }
     }
 
     private void loadNfxFile(Path path) {
         try {
-            // Auto-cache: check if .nfxc exists and is newer
             Path nfxcPath = path.resolveSibling(
                     path.getFileName().toString().replaceAll("\\.nfx$", ".nfxc"));
             if (Files.exists(nfxcPath)
                     && Files.getLastModifiedTime(nfxcPath)
                     .compareTo(Files.getLastModifiedTime(path)) > 0) {
-                // Compiled file is newer — load that instead
                 loadNfxcFile(nfxcPath);
                 return;
             }
@@ -397,9 +410,11 @@ public final class MainWindow {
             controller.loadProject(path);
             functionEditor.loadDefinition(controller.getCurrentDefinition());
             canvasViewport.setPoints(controller.getCurrentPoints());
+            functionEditor.clearErrors();
+            statusLabel.setText("已加载: " + path.getFileName());
         } catch (Exception e) {
-            log.error("Failed to load project: {}", path, e);
-            showError("Failed to load: " + e.getMessage());
+            log.error("加载工程失败: {}", path, e);
+            showError("加载失败: " + e.getMessage());
         }
     }
 
@@ -407,56 +422,47 @@ public final class MainWindow {
         try {
             NfxcReader reader = new NfxcReader();
             CompiledPointCloud cloud = reader.read(path);
-            // Convert float buffer to Vector3d list for the viewport
             var points = new java.util.ArrayList<com.novafx.math.Vector3d>();
             float[] data = cloud.points();
             for (int i = 0; i < cloud.pointCount(); i++) {
                 points.add(new com.novafx.math.Vector3d(data[i * 3], data[i * 3 + 1], data[i * 3 + 2]));
             }
             canvasViewport.setPoints(points);
-
-            // Update title to show compiled file
-            stage.setTitle("NovaFX Studio — " + path.getFileName() + " (compiled)");
-            log.info("Loaded compiled file: {}", path);
+            stage.setTitle("NovaFX Studio — " + path.getFileName() + " (编译)");
+            statusLabel.setText("已加载编译文件: " + path.getFileName());
+            log.info("加载编译文件: {}", path);
         } catch (Exception e) {
-            log.error("Failed to load compiled file: {}", path, e);
-            showError("Failed to load compiled file: " + e.getMessage());
+            log.error("加载编译文件失败: {}", path, e);
+            showError("加载编译文件失败: " + e.getMessage());
         }
     }
 
     // ---------------------------------------------------------------
-    // Export
+    // 导出
     // ---------------------------------------------------------------
 
-    private void handleExport(String description, String extension, java.util.function.Consumer<Path> exporter) {
+    private void handleExport(String description, String extension,
+                              java.util.function.Consumer<Path> exporter) {
         FileChooser chooser = new FileChooser();
-        chooser.setTitle(I18n.get("menu.file.export"));
-        chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(description, extension));
+        chooser.setTitle("导出");
+        chooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter(description, extension));
         File file = chooser.showSaveDialog(stage);
         if (file != null) {
             exporter.accept(file.toPath());
+            statusLabel.setText("已导出: " + file.getName());
         }
     }
 
     // ---------------------------------------------------------------
-    // Misc
+    // 杂项
     // ---------------------------------------------------------------
-
-    private void switchLanguage(Locale locale) {
-        I18n.setLocale(locale);
-        I18n.savePreference(new DefaultPlatformService().configDirectory());
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("NovaFX");
-        alert.setHeaderText(null);
-        alert.setContentText("请重启应用以生效。\nPlease restart the application.");
-        alert.showAndWait();
-    }
 
     private void showAbout() {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(I18n.get("app.about.title"));
+        alert.setTitle("关于 NovaFX Studio");
         alert.setHeaderText(null);
-        alert.setContentText(I18n.get("app.about.text"));
+        alert.setContentText("NovaFX Studio v1.0\n数学粒子编辑器 | 适用于 Minecraft");
         alert.show();
     }
 
@@ -475,12 +481,12 @@ public final class MainWindow {
     }
 
     private String buildTitle(Path projectPath) {
-        String appName = I18n.get("app.title");
+        String appName = "NovaFX Studio";
         if (projectPath != null) {
             return appName + " — " + projectPath.getFileName();
         }
         if (controller.getCurrentProject() != null) {
-            return appName + " — " + controller.getCurrentProject().name() + " (unsaved)";
+            return appName + " — " + controller.getCurrentProject().name() + " (未保存)";
         }
         return appName;
     }

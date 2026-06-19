@@ -13,15 +13,14 @@ import org.slf4j.LoggerFactory;
 import java.util.function.Consumer;
 
 /**
- * Function editor container that supports three editing modes.
+ * 函数编辑器容器，支持三种编辑模式。
  * <p>
- * Modes:
+ * 模式：
  * <ul>
- *   <li><b>简易</b> — MathSymbolPanel + expression fields (default)</li>
- *   <li><b>专业</b> — ExpressionEditor with syntax highlighting</li>
- *   <li><b>LaTeX</b> — LaTeX-style input with live preview</li>
+ *   <li><b>简易</b> — MathSymbolPanel + 表达式输入框</li>
+ *   <li><b>专业</b> — 代码编辑器风格，语法高亮 + 自动补全</li>
+ *   <li><b>LaTeX</b> — LaTeX 源码编辑 + 预览</li>
  * </ul>
- * All modes produce {@link FunctionDefinition} through {@link ParserHub}.
  */
 public final class FunctionEditor extends VBox {
 
@@ -32,42 +31,48 @@ public final class FunctionEditor extends VBox {
     private final ExpressionEditor expressionEditor = new ExpressionEditor();
     private final LatexEditor latexEditor = new LatexEditor();
 
-    private VBox activeEditor = simpleEditor;
+    private VBox activeContainer;
     private Consumer<FunctionDefinition> onFunctionChanged;
+    private Consumer<String> onError;
 
-    /** Creates the function editor with all three modes. */
+    /** 创建函数编辑器。 */
     public FunctionEditor() {
         setStyle("-fx-background-color: #0D0D0D; -fx-border-color: #1A1A1A; -fx-border-width: 1 0 0 0;");
 
-        // Mode switcher at top
         getChildren().add(modeSwitcher);
 
-        // Default: show simple editor
-        getChildren().add(simpleEditor);
-        expressionEditor.setVisible(false);
-        latexEditor.setVisible(false);
+        // 默认显示简易编辑器
+        activeContainer = wrap(simpleEditor);
+        getChildren().add(activeContainer);
 
-        // Mode switching
-        modeSwitcher.setOnModeChanged(mode -> {
-            switchEditor(mode);
-        });
+        // 模式切换
+        modeSwitcher.setOnModeChanged(mode -> switchEditor(mode));
 
-        // Forward changes from all editors
+        // 共享事件转发
         var forward = (Consumer<FunctionDefinition>) def -> {
             if (onFunctionChanged != null) onFunctionChanged.accept(def);
         };
+        var errorForward = (Consumer<String>) err -> {
+            if (onError != null) onError.accept(err);
+        };
 
         simpleEditor.setOnFunctionChanged(forward);
+        simpleEditor.setOnError(errorForward);
         expressionEditor.setOnFunctionChanged(forward);
+        expressionEditor.setOnError(errorForward);
         latexEditor.setOnFunctionChanged(forward);
+        latexEditor.setOnError(errorForward);
     }
 
-    /** Sets callback when function changes. */
     public void setOnFunctionChanged(Consumer<FunctionDefinition> callback) {
         this.onFunctionChanged = callback;
     }
 
-    /** Loads a definition into all editors. */
+    /** 设置错误回调（用于显示即时错误信息）。 */
+    public void setOnError(Consumer<String> callback) {
+        this.onError = callback;
+    }
+
     public void loadDefinition(FunctionDefinition def) {
         if (def == null) return;
         simpleEditor.loadDefinition(def);
@@ -75,7 +80,6 @@ public final class FunctionEditor extends VBox {
         latexEditor.loadDefinition(def);
     }
 
-    /** Returns definition from the currently active editor. */
     public FunctionDefinition getDefinition() {
         return switch (modeSwitcher.getCurrentMode()) {
             case EXPRESSION -> expressionEditor.getDefinition();
@@ -84,38 +88,29 @@ public final class FunctionEditor extends VBox {
         };
     }
 
-    private void switchEditor(ParserHub.InputMode mode) {
-        // Hide all
-        simpleEditor.setVisible(false);
-        expressionEditor.setVisible(false);
-        latexEditor.setVisible(false);
+    /** 清除所有编辑器的错误提示。 */
+    public void clearErrors() {
+        simpleEditor.clearError();
+        expressionEditor.clearError();
+        latexEditor.clearError();
+    }
 
-        // Show selected
-        switch (mode) {
-            case EXPRESSION -> {
-                expressionEditor.setManaged(true);
-                expressionEditor.setVisible(true);
-                if (!getChildren().contains(expressionEditor)) {
-                    getChildren().add(expressionEditor);
-                }
-                activeEditor = expressionEditor;
-            }
-            case LATEX -> {
-                latexEditor.setManaged(true);
-                latexEditor.setVisible(true);
-                if (!getChildren().contains(latexEditor)) {
-                    getChildren().add(latexEditor);
-                }
-                activeEditor = latexEditor;
-            }
-            default -> {
-                simpleEditor.setManaged(true);
-                simpleEditor.setVisible(true);
-                if (!getChildren().contains(simpleEditor)) {
-                    getChildren().add(simpleEditor);
-                }
-                activeEditor = simpleEditor;
-            }
-        }
+    private void switchEditor(ParserHub.InputMode mode) {
+        getChildren().remove(activeContainer);
+
+        VBox newContainer = switch (mode) {
+            case EXPRESSION -> wrap(expressionEditor);
+            case LATEX -> wrap(latexEditor);
+            default -> wrap(simpleEditor);
+        };
+
+        activeContainer = newContainer;
+        getChildren().add(activeContainer);
+    }
+
+    private static VBox wrap(javafx.scene.Node editor) {
+        VBox box = new VBox(editor);
+        VBox.setVgrow(editor, javafx.scene.layout.Priority.ALWAYS);
+        return box;
     }
 }
