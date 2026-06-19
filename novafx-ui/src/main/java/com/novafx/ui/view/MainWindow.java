@@ -7,14 +7,12 @@ import com.novafx.ui.controller.MainController;
 import com.novafx.ui.i18n.I18n;
 import javafx.application.Platform;
 import javafx.scene.Scene;
+import javafx.geometry.Orientation;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
+import javafx.scene.layout.*;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
@@ -101,9 +99,6 @@ public final class MainWindow {
         // Top: navigation bar
         root.setTop(buildNavBar());
 
-        // Center: 3D viewport
-        root.setCenter(canvasViewport);
-
         // Left: resource panel
         root.setLeft(presetPanel);
 
@@ -112,8 +107,15 @@ public final class MainWindow {
         rightPanel.setPrefWidth(260);
         root.setRight(rightPanel);
 
-        // Bottom: function editor
-        root.setBottom(functionEditor);
+        // Center: vertical split between viewport and function editor
+        SplitPane splitPane = new SplitPane();
+        splitPane.setOrientation(Orientation.VERTICAL);
+        splitPane.setStyle("-fx-background-color: #0A0A0A;");
+
+        splitPane.getItems().addAll(canvasViewport, functionEditor);
+        splitPane.setDividerPositions(0.75);
+
+        root.setCenter(splitPane);
 
         return root;
     }
@@ -178,6 +180,10 @@ public final class MainWindow {
             functionEditor.loadDefinition(def);
             canvasViewport.setPoints(controller.getCurrentPoints());
         });
+
+        presetPanel.setOnSaveCurrentAsPreset(() ->
+                controller.saveCurrentAsPreset(controller.getCurrentDefinition().xExpression())
+        );
 
         functionEditor.setOnFunctionChanged(def -> {
             controller.updateFunction(

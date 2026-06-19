@@ -1,23 +1,26 @@
 package com.novafx.renderer;
 
 import com.novafx.math.Vector3d;
+import org.lwjgl.BufferUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.FloatBuffer;
 import java.util.List;
 
 import static org.lwjgl.opengl.GL33.*;
 
 /**
- * Renders a point cloud from a list of {@link Vector3d} points.
+ * GPU-accelerated point cloud renderer.
  * <p>
- * Supports two modes:
+ * Uploads point data as a direct {@link FloatBuffer} to a VBO and
+ * renders with a single {@code glDrawArrays(GL_POINTS)} call.
+ * <p>
+ * Performance targets:
  * <ul>
- *   <li><b>Points</b> — each vertex rendered as a GL_POINT</li>
- *   <li><b>Wireframe / Lines</b> — consecutive vertices connected by GL_LINE_STRIP</li>
+ *   <li>100k points: 60+ FPS</li>
+ *   <li>10M points: 30+ FPS (GPU-bound)</li>
  * </ul>
- * Uses a shared shader program for point/line rendering with configurable
- * point size and color.
  */
 public final class PointRenderer {
 
@@ -27,8 +30,10 @@ public final class PointRenderer {
             #version 330 core
             layout(location = 0) in vec3 aPos;
             uniform mat4 uMVP;
+            uniform float uPointSize;
             void main() {
                 gl_Position = uMVP * vec4(aPos, 1.0);
+                gl_PointSize = uPointSize / (1.0 + length(gl_Position.xyz / gl_Position.w));
             }
             """;
 
@@ -51,6 +56,10 @@ public final class PointRenderer {
 
     private int mvpUniform;
     private int colorUniform;
+    private int pointSizeUniform;
+
+    // Reusable direct buffer to avoid reallocation
+    private FloatBuffer reusableBuffer;
 
     /** Creates a point renderer with default size 3 and white color. */
     public PointRenderer() {
@@ -59,29 +68,58 @@ public final class PointRenderer {
     }
 
     /**
-     * Initializes the shader program and Vertex Array Object.
-     * Must be called once after an OpenGL context is current.
+     * Initializes the shader program and VAO/VBO.
      *
-     * @param points the point cloud data
+     * @param points initial point cloud
      */
     public void init(List<Vector3d> points) {
         this.shader = new ShaderProgram(VERTEX_SHADER, FRAGMENT_SHADER);
         this.mvpUniform = shader.getUniformLocation("uMVP");
         this.colorUniform = shader.getUniformLocation("uColor");
+        this.pointSizeUniform = shader.getUniformLocation("uPointSize");
 
+        createVAO();
         uploadPoints(points);
         initialized = true;
-        log.info("PointRenderer initialized with {} points", vertexCount);
+        log.info("PointRenderer initialized");
     }
 
     /**
-     * Updates the point cloud data in the GPU buffer.
+     * Updates point data from a {@link List} of {@link Vector3d}.
      *
      * @param points new point data
      */
     public void updatePoints(List<Vector3d> points) {
         if (!initialized) return;
         uploadPoints(points);
+    }
+
+    /**
+     * Uploads point data directly from a {@link FloatBuffer}.
+     * <p>
+     * The buffer should contain interleaved x, y, z values
+     * (3 floats per point). After upload the buffer position is
+     * undefined.
+     *
+     * @param buffer FloatBuffer containing vertex data
+     * @param count  number of points
+     */
+    public void uploadPoints(FloatBuffer buffer, int count) {
+        if (!initialized) return;
+        if (buffer == null || count <= 0) {
+            vertexCount = 0;
+            return;
+        }
+
+        buffer.rewind();
+        vertexCount = count;
+
+        glBindVertexArray(vao);
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBufferData(GL_ARRAY_BUFFER, buffer, GL_DYNAMIC_DRAW);
+        glVertexAttribPointer(0, 3, GL_FLOAT, false, 3 * Float.BYTES, 0);
+        glEnableVertexAttribArray(0);
+        glBindVertexArray(0);
     }
 
     /**
@@ -95,9 +133,9 @@ public final class PointRenderer {
         shader.use();
         shader.setUniformMatrix4(mvpUniform, vpMatrix);
         shader.setUniformVec3(colorUniform, color[0], color[1], color[2]);
+        shader.setUniformFloat(pointSizeUniform, pointSize);
 
         glBindVertexArray(vao);
-        glPointSize(pointSize);
         glDrawArrays(GL_POINTS, 0, vertexCount);
         glBindVertexArray(0);
 
@@ -105,7 +143,7 @@ public final class PointRenderer {
     }
 
     /**
-     * Renders the point cloud as a continuous line strip.
+     * Renders the point cloud as a line strip.
      *
      * @param vpMatrix column-major 4x4 view-projection matrix
      */
@@ -115,6 +153,7 @@ public final class PointRenderer {
         shader.use();
         shader.setUniformMatrix4(mvpUniform, vpMatrix);
         shader.setUniformVec3(colorUniform, color[0], color[1], color[2]);
+        shader.setUniformFloat(pointSizeUniform, pointSize);
 
         glBindVertexArray(vao);
         glDrawArrays(GL_LINE_STRIP, 0, vertexCount);
@@ -123,31 +162,29 @@ public final class PointRenderer {
         ShaderProgram.unbind();
     }
 
-    /** Current point size in pixels. */
+    /** Returns the current point size. */
     public float pointSize() {
         return pointSize;
     }
 
-    /** Sets the point size in pixels. */
+    /** Sets the base point size (automatically attenuated by distance). */
     public void setPointSize(float size) {
         this.pointSize = Math.max(1f, size);
     }
 
-    /** Sets the RGB color for rendering (values in [0, 1]). */
+    /** Sets the RGB color (components in [0, 1]). */
     public void setColor(float r, float g, float b) {
         this.color[0] = r;
         this.color[1] = g;
         this.color[2] = b;
     }
 
-    /** Number of vertices currently uploaded. */
+    /** Returns the number of vertices currently uploaded. */
     public int vertexCount() {
         return vertexCount;
     }
 
-    /**
-     * Releases GPU resources.
-     */
+    /** Releases GPU resources. */
     public void cleanup() {
         if (initialized) {
             glDeleteVertexArrays(vao);
@@ -158,35 +195,41 @@ public final class PointRenderer {
         }
     }
 
+    // ---------------------------------------------------------------
+    // Internal
+    // ---------------------------------------------------------------
+
+    private void createVAO() {
+        int[] vaoArr = new int[1];
+        int[] vboArr = new int[1];
+        glGenVertexArrays(vaoArr);
+        glGenBuffers(vboArr);
+        vao = vaoArr[0];
+        vbo = vboArr[0];
+    }
+
     private void uploadPoints(List<Vector3d> points) {
         if (points == null || points.isEmpty()) {
             vertexCount = 0;
             return;
         }
 
-        float[] data = new float[points.size() * 3];
-        int idx = 0;
+        int count = points.size();
+        int floatsNeeded = count * 3;
+
+        // Reuse or allocate direct FloatBuffer
+        if (reusableBuffer == null || reusableBuffer.capacity() < floatsNeeded) {
+            reusableBuffer = BufferUtils.createFloatBuffer(floatsNeeded);
+        }
+
+        reusableBuffer.rewind();
         for (Vector3d p : points) {
-            data[idx++] = (float) p.x();
-            data[idx++] = (float) p.y();
-            data[idx++] = (float) p.z();
+            reusableBuffer.put((float) p.x());
+            reusableBuffer.put((float) p.y());
+            reusableBuffer.put((float) p.z());
         }
-        vertexCount = points.size();
+        reusableBuffer.flip();
 
-        if (vao == 0) {
-            int[] vaoArr = new int[1];
-            int[] vboArr = new int[1];
-            glGenVertexArrays(vaoArr);
-            glGenBuffers(vboArr);
-            vao = vaoArr[0];
-            vbo = vboArr[0];
-        }
-
-        glBindVertexArray(vao);
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBufferData(GL_ARRAY_BUFFER, data, GL_DYNAMIC_DRAW);
-        glVertexAttribPointer(0, 3, GL_FLOAT, false, 3 * Float.BYTES, 0);
-        glEnableVertexAttribArray(0);
-        glBindVertexArray(0);
+        uploadPoints(reusableBuffer, count);
     }
 }

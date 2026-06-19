@@ -21,8 +21,8 @@ class MainControllerTest {
     @Test
     void shouldProvidePresetNames() {
         assertThat(controller.getPresetNames())
-                .hasSize(9)
-                .contains("Spiral", "Circle", "Heart");
+                .hasSize(12)
+                .contains("Spiral", "Circle", "Heart", "DNA", "Sphere", "Torus");
     }
 
     @Test

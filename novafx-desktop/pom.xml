@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.novafx</groupId>
         <artifactId>novafx</artifactId>
-        <version>1.0.0</version>
+        <version>1.0.3</version>
     </parent>
     <artifactId>novafx-desktop</artifactId>
     <name>NovaFX Desktop</name>

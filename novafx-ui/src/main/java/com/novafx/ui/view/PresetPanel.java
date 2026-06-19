@@ -2,13 +2,17 @@ package com.novafx.ui.view;
 
 import com.novafx.ui.i18n.I18n;
 import javafx.geometry.Insets;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 /**
@@ -28,7 +32,10 @@ public final class PresetPanel extends VBox {
             Map.entry("Infinity", "∞"),
             Map.entry("Flower", "✿"),
             Map.entry("Wave", "〰"),
-            Map.entry("Helix", "🧬")
+            Map.entry("Helix", "🧬"),
+            Map.entry("DNA", "🧬"),
+            Map.entry("Sphere", "🌐"),
+            Map.entry("Torus", "⭕")
     );
 
     private static final Map<String, String> LABELS = Map.ofEntries(
@@ -40,11 +47,15 @@ public final class PresetPanel extends VBox {
             Map.entry("Infinity", "无穷"),
             Map.entry("Flower", "花朵"),
             Map.entry("Wave", "波浪"),
-            Map.entry("Helix", "螺旋线")
+            Map.entry("Helix", "螺旋线"),
+            Map.entry("DNA", "DNA"),
+            Map.entry("Sphere", "球体"),
+            Map.entry("Torus", "环面")
     );
 
     private final FlowPane cardGrid = new FlowPane();
     private Consumer<String> onPresetSelected;
+    private Runnable onSaveCurrentAsPreset;
 
     /** Creates the preset panel with the given preset names. */
     public PresetPanel(List<String> presetNames) {
@@ -71,13 +82,45 @@ public final class PresetPanel extends VBox {
         scroll.setStyle("-fx-background-color: transparent; -fx-border-color: transparent;");
         scroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
 
-        getChildren().addAll(header, scroll);
+        // Create preset button
+        Button createBtn = new Button("+ 新建预设");
+        createBtn.setStyle(
+                "-fx-background-color: transparent;"
+                        + "-fx-text-fill: #F97316;"
+                        + "-fx-font-size: 12;"
+                        + "-fx-border-color: #262626;"
+                        + "-fx-border-radius: 4;"
+                        + "-fx-padding: 6 12;"
+                        + "-fx-cursor: hand;"
+        );
+        createBtn.setOnAction(e -> {
+            TextInputDialog dialog = new TextInputDialog();
+            dialog.setTitle("新建预设");
+            dialog.setHeaderText("输入预设名称");
+            dialog.setContentText("名称:");
+            Optional<String> result = dialog.showAndWait();
+            result.ifPresent(name -> {
+                if (!name.isBlank() && onSaveCurrentAsPreset != null) {
+                    onSaveCurrentAsPreset.run();
+                }
+            });
+        });
+
+        HBox footer = new HBox(createBtn);
+        footer.setPadding(new Insets(6, 8, 8, 8));
+
+        getChildren().addAll(header, scroll, footer);
         VBox.setVgrow(scroll, javafx.scene.layout.Priority.ALWAYS);
     }
 
     /** Sets the callback invoked when a preset is selected. */
     public void setOnPresetSelected(Consumer<String> callback) {
         this.onPresetSelected = callback;
+    }
+
+    /** Sets the callback invoked when saving the current function as a preset. */
+    public void setOnSaveCurrentAsPreset(Runnable callback) {
+        this.onSaveCurrentAsPreset = callback;
     }
 
     private VBox createCard(String name) {

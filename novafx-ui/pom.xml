@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.novafx</groupId>
         <artifactId>novafx</artifactId>
-        <version>1.0.0</version>
+        <version>1.0.3</version>
     </parent>
     <artifactId>novafx-ui</artifactId>
     <name>NovaFX UI</name>
@@ -40,6 +40,11 @@
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.lwjgl</groupId>
+            <artifactId>lwjgl-glfw</artifactId>
+            <version>${lwjgl.version}</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>

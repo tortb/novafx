@@ -35,6 +35,9 @@ public final class MathPresets {
         presets.put("Flower", flower());
         presets.put("Wave", wave());
         presets.put("Helix", helix());
+        presets.put("DNA", dna());
+        presets.put("Sphere", sphere());
+        presets.put("Torus", torus());
         return Collections.unmodifiableMap(new LinkedHashMap<>(presets));
     }
 
@@ -148,6 +151,36 @@ public final class MathPresets {
                 "3*sin(t)",
                 "t/3",
                 0, 6 * Math.PI, 0.05
+        );
+    }
+
+    /** DNA-style double helix. */
+    public static FunctionDefinition dna() {
+        return new FunctionDefinition(
+                "3*cos(t)",
+                "sin(2*t)*3",
+                "3*sin(t)",
+                0, 4 * Math.PI, 0.05
+        );
+    }
+
+    /** Spherical spiral (path on a sphere surface). */
+    public static FunctionDefinition sphere() {
+        return new FunctionDefinition(
+                "3*cos(t)*sin(0.1*t)",
+                "3*cos(0.1*t)",
+                "3*sin(t)*sin(0.1*t)",
+                0, 20 * Math.PI, 0.08
+        );
+    }
+
+    /** Torus knot (3,8) path on a torus surface. */
+    public static FunctionDefinition torus() {
+        return new FunctionDefinition(
+                "(3+cos(3*t))*cos(8*t)",
+                "(3+cos(3*t))*sin(8*t)",
+                "sin(3*t)",
+                0, 2 * Math.PI, 0.03
         );
     }
 }

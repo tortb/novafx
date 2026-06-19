@@ -10,16 +10,17 @@ import static org.assertj.core.api.Assertions.*;
 class MathPresetsTest {
 
     @Test
-    void shouldProvideAllNinePresets() {
+    void shouldProvideAllPresets() {
         Map<String, FunctionDefinition> all = MathPresets.all();
-        assertThat(all).hasSize(9);
+        assertThat(all).hasSize(12);
     }
 
     @Test
     void shouldContainAllRequiredPresets() {
         assertThat(MathPresets.names()).containsExactly(
                 "Circle", "Heart", "Star", "Spiral", "DoubleSpiral",
-                "Infinity", "Flower", "Wave", "Helix"
+                "Infinity", "Flower", "Wave", "Helix",
+                "DNA", "Sphere", "Torus"
         );
     }
 

@@ -151,6 +151,25 @@ public final class MainController {
         return currentPoints != null ? currentPoints : List.of();
     }
 
+    /**
+     * Saves the current function as a named preset.
+     *
+     * @param name the preset name
+     */
+    public void saveCurrentAsPreset(String name) {
+        if (currentProject == null) return;
+        Project preset = new Project(
+                UUID.randomUUID(),
+                name,
+                "User preset: " + name,
+                currentProject.functionDefinition(),
+                Instant.now(),
+                Instant.now()
+        );
+        projectRepository.save(preset);
+        log.info("Saved preset: {}", name);
+    }
+
     // ---------------------------------------------------------------
     // Parameters
     // ---------------------------------------------------------------

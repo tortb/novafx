@@ -189,18 +189,25 @@ public final class CanvasViewport extends Canvas {
 
         // Axes (thicker)
         gc.setLineWidth(2.0);
+        String[] axisLabels = {"X", "Y", "Z"};
         for (int i = 0; i < axisLines.length; i += 6) {
             float[] from = ProjectionUtils.project(vpMatrix, axisLines[i], axisLines[i + 1], axisLines[i + 2], w, h);
             float[] to = ProjectionUtils.project(vpMatrix, axisLines[i + 3], axisLines[i + 4], axisLines[i + 5], w, h);
 
             if (from != null && to != null) {
-                // Color by axis: index/6 determines which axis
-                gc.setStroke(switch (i / 6) {
+                int axisIdx = i / 6;
+                var axisColor = switch (axisIdx) {
                     case 0 -> AXIS_X;
                     case 1 -> AXIS_Y;
                     default -> AXIS_Z;
-                });
+                };
+                gc.setStroke(axisColor);
                 gc.strokeLine(from[0], from[1], to[0], to[1]);
+
+                // Axis label at endpoint + small offset
+                gc.setFill(axisColor);
+                gc.setFont(javafx.scene.text.Font.font("monospace", 12));
+                gc.fillText(axisLabels[axisIdx], to[0] + 4, to[1] - 4);
             }
         }
     }
