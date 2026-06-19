@@ -67,9 +67,9 @@ class MainControllerTest {
     }
 
     @Test
-    void shouldInvokeOnPointsChanged() {
+    void shouldInvokeOnStateChanged() {
         final boolean[] called = {false};
-        controller.setOnPointsChanged(() -> called[0] = true);
+        controller.setOnStateChanged(() -> called[0] = true);
         controller.applyPreset("Star");
         assertThat(called[0]).isTrue();
     }
@@ -109,9 +109,9 @@ class MainControllerTest {
     }
 
     @Test
-    void shouldInvokeOnParametersChanged() {
+    void shouldInvokeOnStateChangedOnUpdate() {
         final boolean[] called = {false};
-        controller.setOnParametersChanged(() -> called[0] = true);
+        controller.setOnStateChanged(() -> called[0] = true);
         controller.updateFunction("a*t", "t", "0", 0, 1, 0.5);
         assertThat(called[0]).isTrue();
     }

@@ -5,6 +5,8 @@ import com.novafx.core.workspace.ProjectNodeType;
 import com.novafx.core.workspace.ProjectTreeModel;
 import com.novafx.core.workspace.Workspace;
 import com.novafx.ui.i18n.I18n;
+
+import java.util.Map;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.ListCell;
@@ -194,21 +196,46 @@ public final class CommandPalette {
         listView.getSelectionModel().selectFirst();
     }
 
+    /** 预设名称 → 显示名称。 */
+    private static final Map<String, String> PRESET_LABELS = Map.ofEntries(
+            Map.entry("Circle", "圆形"), Map.entry("Heart", "爱心"),
+            Map.entry("Star", "星形"), Map.entry("Spiral", "螺旋"),
+            Map.entry("DoubleSpiral", "双螺旋"), Map.entry("Infinity", "无穷"),
+            Map.entry("Flower", "花朵"), Map.entry("Wave", "波浪"),
+            Map.entry("Helix", "螺旋线"), Map.entry("DNA", "DNA"),
+            Map.entry("Sphere", "球体"), Map.entry("Torus", "环面")
+    );
+
+    private static String displayName(ProjectNode node) {
+        String key = switch (node.nodeType()) {
+            case FUNCTION       -> "node.function";
+            case PARAMETER_LIST -> "node.parameters";
+            case CAMERA         -> "node.camera";
+            case RENDER         -> "node.render";
+            case PRESETS        -> "node.presets";
+            case PROJECT        -> "node.project";
+            default             -> null;
+        };
+        if (key != null) return I18n.get(key);
+        if (node.nodeType() == ProjectNodeType.PROJECT) {
+            String label = PRESET_LABELS.get(node.displayName());
+            if (label != null) return label;
+        }
+        return node.displayName();
+    }
+
     /**
-     * Recursively collects tree nodes into the entry list,
-     * building a path label like {@code "Heart / Function / x(t)"}.
+     * 递归收集树节点，构造路径标签如 {@code "爱心 / 函数 / x(t)"}。
      */
     private void indexNodes(ProjectNode node, String parentPath,
                             List<Entry> entries) {
-        String path = parentPath.isEmpty()
-                ? node.displayName()
-                : parentPath + " / " + node.displayName();
+        String name = displayName(node);
+        String path = parentPath.isEmpty() ? name : parentPath + " / " + name;
 
         String icon = iconFor(node.nodeType());
         String label = icon + " " + path;
 
-        // Build a rich search-text that includes type names and the raw data
-        String searchText = (node.displayName() + " " + node.nodeType()
+        String searchText = (name + " " + node.nodeType()
                 + " " + (node.data() != null ? node.data() : "")
                 + " " + path).toLowerCase();
 

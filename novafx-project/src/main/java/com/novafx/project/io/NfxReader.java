@@ -15,6 +15,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Reads {@code .nfx} files using the Tomlj parser.
@@ -102,6 +104,20 @@ public final class NfxReader implements ProjectReader {
                 axis = getBooleanOrDefault(renderTable, "axis", true);
             }
 
+            // ── [parameter] ──
+            Map<String, Double> parameters = Map.of();
+            var paramTable = result.getTable("parameter");
+            if (paramTable != null) {
+                var map = new LinkedHashMap<String, Double>();
+                for (var key : paramTable.keySet()) {
+                    Double value = paramTable.getDouble(key);
+                    if (value != null) {
+                        map.put(key, value);
+                    }
+                }
+                parameters = Map.copyOf(map);
+            }
+
             FunctionDefinition function;
             try {
                 function = new FunctionDefinition(xExpr, yExpr, zExpr, start, end, step);
@@ -114,6 +130,7 @@ public final class NfxReader implements ProjectReader {
                     projectId,
                     new Meta(name, author),
                     function,
+                    parameters,
                     new ParticleSettings(pSize, density),
                     new RenderSettings(grid, axis)
             );

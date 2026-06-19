@@ -52,17 +52,62 @@ import java.util.function.Consumer;
 public final class ProjectExplorer extends VBox {
 
     private static final Map<ProjectNodeType, String> ICONS = Map.of(
-            ProjectNodeType.PROJECT,        "📁",   // 📁
-            ProjectNodeType.FUNCTION,       "ƒ",         // ƒ
+            ProjectNodeType.PROJECT,        "📁",
+            ProjectNodeType.FUNCTION,       "ƒ",
             ProjectNodeType.X_EXPR,         "x",
             ProjectNodeType.Y_EXPR,         "y",
             ProjectNodeType.Z_EXPR,         "z",
-            ProjectNodeType.PARAMETER_LIST, "λ",         // λ
-            ProjectNodeType.PARAMETER,      "λ",         // λ
-            ProjectNodeType.CAMERA,         "📷",   // 📷
-            ProjectNodeType.RENDER,         "🎨",   // 🎨
-            ProjectNodeType.PRESETS,        "◆"          // ◆
+            ProjectNodeType.PARAMETER_LIST, "λ",
+            ProjectNodeType.PARAMETER,      "λ",
+            ProjectNodeType.CAMERA,         "📷",
+            ProjectNodeType.RENDER,         "🎨",
+            ProjectNodeType.PRESETS,        "◆"
     );
+
+    /** 预设名称 → 显示名称（中文）映射。 */
+    private static final Map<String, String> PRESET_LABELS = Map.ofEntries(
+            Map.entry("Circle", "圆形"),
+            Map.entry("Heart", "爱心"),
+            Map.entry("Star", "星形"),
+            Map.entry("Spiral", "螺旋"),
+            Map.entry("DoubleSpiral", "双螺旋"),
+            Map.entry("Infinity", "无穷"),
+            Map.entry("Flower", "花朵"),
+            Map.entry("Wave", "波浪"),
+            Map.entry("Helix", "螺旋线"),
+            Map.entry("DNA", "DNA"),
+            Map.entry("Sphere", "球体"),
+            Map.entry("Torus", "环面")
+    );
+
+    /**
+     * 返回节点在当前语言下的显示名称。
+     * 结构节点（Function / Parameters / …）从 I18n 取翻译，
+     * 预设名（Heart / Spiral / …）用中文映射表，
+     * 其余保持原样。
+     */
+    private static String localizedName(ProjectNode node) {
+        // 结构节点 → i18n
+        String i18nKey = switch (node.nodeType()) {
+            case FUNCTION       -> "node.function";
+            case PARAMETER_LIST -> "node.parameters";
+            case CAMERA         -> "node.camera";
+            case RENDER         -> "node.render";
+            case PRESETS        -> "node.presets";
+            case PROJECT        -> "node.project";
+            default             -> null;
+        };
+        if (i18nKey != null) {
+            return I18n.get(i18nKey);
+        }
+        // 预设名称 → 中文
+        if (node.nodeType() == ProjectNodeType.PROJECT) {
+            String label = PRESET_LABELS.get(node.displayName());
+            if (label != null) return label;
+        }
+        // 其余保持原样（x(t), y(t), z(t), 参数名…）
+        return node.displayName();
+    }
 
     private final TreeView<ProjectNode> treeView;
     private final TreeItem<ProjectNode> invisibleRoot;
@@ -403,7 +448,7 @@ public final class ProjectExplorer extends VBox {
             iconLabel.setText(iconFor(node.nodeType()));
             iconLabel.setStyle("-fx-text-fill: #F97316; -fx-font-size: 14;");
 
-            nameLabel.setText(node.displayName());
+            nameLabel.setText(localizedName(node));
             nameLabel.setStyle("-fx-text-fill: #CCCCCC; -fx-font-size: 14;");
 
             setTooltip(new Tooltip(node.id()));

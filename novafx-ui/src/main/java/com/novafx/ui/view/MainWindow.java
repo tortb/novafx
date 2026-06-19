@@ -1,6 +1,7 @@
 package com.novafx.ui.view;
 
 import com.novafx.core.domain.Project;
+import com.novafx.core.error.ProjectError;
 import com.novafx.core.workspace.ProjectNode;
 import com.novafx.core.workspace.ProjectNodeType;
 import com.novafx.core.workspace.ProjectTreeModel;
@@ -11,6 +12,7 @@ import com.novafx.project.DefaultPlatformService;
 import com.novafx.project.io.NfxcReader;
 import com.novafx.project.model.CompiledPointCloud;
 import com.novafx.project.workspace.WorkspaceLoader;
+import com.novafx.ui.command.UpdateFunctionCommand;
 import com.novafx.ui.controller.MainController;
 import com.novafx.ui.i18n.I18n;
 import com.novafx.ui.view.dialog.NewProjectDialog;
@@ -312,12 +314,12 @@ public final class MainWindow {
                 controller.saveCurrentAsPreset(controller.getCurrentDefinition().xExpression())
         );
 
-        // ── 函数编辑器 ──────────────────────────────────────
+        // ── 函数编辑器（通过 CommandBus 支持 Undo）──────────
         functionEditor.setOnFunctionChanged(def -> {
-            controller.updateFunction(
+            var cmd = new UpdateFunctionCommand(controller,
                     def.xExpression(), def.yExpression(), def.zExpression(),
-                    def.start(), def.end(), def.step()
-            );
+                    def.start(), def.end(), def.step());
+            controller.getCommandBus().dispatch(cmd);
         });
 
         // 即时错误反馈
@@ -333,25 +335,36 @@ public final class MainWindow {
             });
         });
 
-        // ── 其它面板 ──────────────────────────────────────
-        controller.setOnPointsChanged(() ->
+        // ── 统一状态变更 → 更新全部 UI ─────────────────────
+        controller.setOnStateChanged(() ->
                 Platform.runLater(() -> {
                     canvasViewport.setPoints(controller.getCurrentPoints());
+                    parameterPanel.setParameters(controller.getParameters());
                     var pts = controller.getCurrentPoints();
                     statusLabel.setText(I18n.format("status.points", pts.size()));
                     statusLabel.setStyle("-fx-text-fill: #555; -fx-font-size: 10;");
+                    updateTitle();
                 })
         );
 
-        controller.setOnParametersChanged(() ->
+        // ── 管线错误回调 ──────────────────────────────────
+        controller.setOnPipelineErrors(errors ->
                 Platform.runLater(() -> {
-                    List<Parameter> params = controller.getParameters();
-                    parameterPanel.setParameters(params);
+                    for (ProjectError err : errors) {
+                        if (err.isError()) {
+                            statusLabel.setText("⚠ " + err.message());
+                            statusLabel.setStyle("-fx-text-fill: #EF4444; -fx-font-size: 10;");
+                            return;
+                        }
+                    }
+                    for (ProjectError err : errors) {
+                        if (err.isWarning()) {
+                            statusLabel.setText("⚠ " + err.message());
+                            statusLabel.setStyle("-fx-text-fill: #F97316; -fx-font-size: 10;");
+                            return;
+                        }
+                    }
                 })
-        );
-
-        controller.setOnProjectChanged(() ->
-                Platform.runLater(this::updateTitle)
         );
 
         parameterPanel.setOnParameterChanged((name, value) ->
@@ -441,6 +454,16 @@ public final class MainWindow {
         scene.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
             if (e.isControlDown() && e.getCode() == KeyCode.P) {
                 commandPalette.show();
+                e.consume();
+            }
+            // Ctrl+Z Undo
+            if (e.isControlDown() && !e.isShiftDown() && e.getCode() == KeyCode.Z) {
+                controller.getCommandBus().undo();
+                e.consume();
+            }
+            // Ctrl+Shift+Z Redo
+            if (e.isControlDown() && e.isShiftDown() && e.getCode() == KeyCode.Z) {
+                controller.getCommandBus().redo();
                 e.consume();
             }
         });

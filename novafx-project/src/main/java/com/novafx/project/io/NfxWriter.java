@@ -4,6 +4,8 @@ import com.novafx.project.model.Meta;
 import com.novafx.project.model.ParticleSettings;
 import com.novafx.project.model.Project;
 import com.novafx.project.model.RenderSettings;
+
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,6 +76,15 @@ public final class NfxWriter implements ProjectWriter {
         sb.append("\n[render]\n");
         sb.append("grid = ").append(render.grid()).append('\n');
         sb.append("axis = ").append(render.axis()).append('\n');
+
+        // [parameter]
+        Map<String, Double> params = project.parameters();
+        if (params != null && !params.isEmpty()) {
+            sb.append("\n[parameter]\n");
+            for (var entry : params.entrySet()) {
+                sb.append(entry.getKey()).append(" = ").append(doubleStr(entry.getValue())).append('\n');
+            }
+        }
 
         return sb.toString();
     }

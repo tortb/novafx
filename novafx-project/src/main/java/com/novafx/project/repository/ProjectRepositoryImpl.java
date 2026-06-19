@@ -12,6 +12,8 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -82,5 +84,52 @@ public final class ProjectRepositoryImpl implements ProjectRepository {
         );
         writer.write(fileProject, path);
         log.debug("Saved project '{}' to {}", project.name(), path);
+    }
+
+    @Override
+    public ProjectLoadResult loadWithParameters(Path path) {
+        var fileProject = reader.read(path);
+        FunctionDefinition function = fileProject.function();
+
+        UUID id;
+        try {
+            id = (fileProject.id() != null && !fileProject.id().isBlank())
+                    ? UUID.fromString(fileProject.id())
+                    : UUID.randomUUID();
+        } catch (IllegalArgumentException e) {
+            id = UUID.randomUUID();
+        }
+
+        var domainProject = new Project(
+                id,
+                fileProject.meta().name(),
+                "",
+                function,
+                Instant.now(),
+                Instant.now()
+        );
+
+        // Convert Map<String, Double> to Map<String, Parameter> for the UI layer
+        Map<String, Double> persisted = fileProject.parameters();
+        log.debug("Loaded project '{}' (id={}) from {} with {} parameter(s)",
+                domainProject.name(), id, path, persisted.size());
+
+        return new ProjectLoadResult(domainProject, persisted);
+    }
+
+    @Override
+    public void save(Project project, Path path, Map<String, Double> parameters) {
+        var fileProject = new com.novafx.project.model.Project(
+                com.novafx.project.model.Project.CURRENT_VERSION,
+                project.id().toString(),
+                new Meta(project.name(), ""),
+                project.functionDefinition(),
+                parameters != null ? Map.copyOf(parameters) : Map.of(),
+                com.novafx.project.model.ParticleSettings.defaults(),
+                com.novafx.project.model.RenderSettings.defaults()
+        );
+        writer.write(fileProject, path);
+        log.debug("Saved project '{}' to {} with {} parameter(s)",
+                project.name(), path, parameters != null ? parameters.size() : 0);
     }
 }
