@@ -77,4 +77,23 @@ class MatrixUtilsTest {
         // Different aspect ratios should produce different matrices
         assertThat(p1).isNotEqualTo(p2);
     }
+
+    @Test
+    void orthographicShouldMapCenterToOrigin() {
+        float halfH = 5f;
+        float halfW = halfH * 1.6f;
+        float[] m = MatrixUtils.orthographic(-halfW, halfW, -halfH, halfH, 0f, 100f);
+
+        // Center of orthographic volume → NDC center (0,0)
+        // For symmetric frustum (right = -left, top = -bottom):
+        //   m[0] = 2/(right-left) = 1/halfW
+        //   m[12] = -(right+left)/(right-left) = 0
+        assertThat(m[0]).isCloseTo(1f / halfW, within(1e-6f));
+        assertThat(m[5]).isCloseTo(1f / halfH, within(1e-6f));
+        assertThat(m[10]).isCloseTo(-2f / 100f, within(1e-6f));
+        assertThat(m[12]).isCloseTo(0f, within(1e-6f));
+        assertThat(m[13]).isCloseTo(0f, within(1e-6f));
+        // w component should be 1 (no perspective division)
+        assertThat(m[15]).isEqualTo(1f);
+    }
 }

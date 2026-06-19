@@ -76,7 +76,7 @@ public final class ParameterPanel extends VBox {
             setPadding(new Insets(2, 0, 2, 0));
 
             nameLabel = new Label(param.name());
-            nameLabel.setStyle("-fx-font-size: 12; -fx-font-weight: bold; -fx-text-fill: #F97316;");
+            nameLabel.setStyle("-fx-font-size: 12; -fx-font-weight: bold; -fx-text-fill: #A855F7;");
 
             this.slider = new Slider(param.min(), param.max(), param.value());
             slider.setShowTickLabels(false);

@@ -86,7 +86,7 @@ public final class PresetPanel extends VBox {
         Button createBtn = new Button("+ 新建预设");
         createBtn.setStyle(
                 "-fx-background-color: transparent;"
-                        + "-fx-text-fill: #F97316;"
+                        + "-fx-text-fill: #A855F7;"
                         + "-fx-font-size: 12;"
                         + "-fx-border-color: #262626;"
                         + "-fx-border-radius: 4;"
@@ -139,7 +139,7 @@ public final class PresetPanel extends VBox {
         );
 
         Label iconLabel = new Label(icon);
-        iconLabel.setStyle("-fx-font-size: 20; -fx-text-fill: #F97316;");
+        iconLabel.setStyle("-fx-font-size: 20; -fx-text-fill: #A855F7;");
 
         Label nameLabel = new Label(label);
         nameLabel.setStyle("-fx-font-size: 11; -fx-text-fill: #AAA;");
@@ -150,7 +150,7 @@ public final class PresetPanel extends VBox {
                 card.setStyle(
                         "-fx-background-color: #1A1A1A;"
                                 + "-fx-background-radius: 6;"
-                                + "-fx-border-color: #F97316;"
+                                + "-fx-border-color: #A855F7;"
                                 + "-fx-border-radius: 6;"
                                 + "-fx-cursor: hand;"
                 )

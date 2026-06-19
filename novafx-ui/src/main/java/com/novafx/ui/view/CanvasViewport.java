@@ -34,6 +34,9 @@ public final class CanvasViewport extends Canvas {
     private static final Color AXIS_Y = Color.rgb(80, 200, 80);
     private static final Color AXIS_Z = Color.rgb(60, 120, 240);
 
+    /** Projection mode for the viewport. */
+    public enum ProjectionMode { PERSPECTIVE_3D, ORTHOGRAPHIC_2D }
+
     private final Camera camera;
     private final AnimationTimer renderLoop;
 
@@ -42,6 +45,7 @@ public final class CanvasViewport extends Canvas {
     private float pointSize = 2.0f;
     private Color pointColor = Color.CORNFLOWERBLUE;
     private boolean showGrid = true;
+    private ProjectionMode projectionMode = ProjectionMode.PERSPECTIVE_3D;
 
     private double mouseX;
     private double mouseY;
@@ -114,9 +118,40 @@ public final class CanvasViewport extends Canvas {
         this.showGrid = show;
     }
 
+    /** Returns the underlying camera (for direct manipulation). */
+    public Camera camera() {
+        return camera;
+    }
+
+    /** Sets the projection mode (2D orthographic or 3D perspective). */
+    public void setProjectionMode(ProjectionMode mode) {
+        this.projectionMode = mode;
+        if (mode == ProjectionMode.ORTHOGRAPHIC_2D) {
+            camera.setProjectionType(Camera.ProjectionType.ORTHOGRAPHIC);
+            camera.setDistance(8f);
+            // Lock to a mostly top-down view
+            camera.setAzimuth(0);
+            camera.setElevation((float) Math.toRadians(89));
+        } else {
+            camera.setProjectionType(Camera.ProjectionType.PERSPECTIVE);
+            camera.reset();
+        }
+    }
+
+    /** Returns the current projection mode. */
+    public ProjectionMode getProjectionMode() {
+        return projectionMode;
+    }
+
     /** Resets the camera to default position. */
     public void resetCamera() {
-        camera.reset();
+        if (projectionMode == ProjectionMode.ORTHOGRAPHIC_2D) {
+            camera.setDistance(8f);
+            camera.setAzimuth(0);
+            camera.setElevation((float) Math.toRadians(89));
+        } else {
+            camera.reset();
+        }
     }
 
     // ---------------------------------------------------------------
@@ -256,12 +291,12 @@ public final class CanvasViewport extends Canvas {
             mouseY = event.getSceneY();
 
             if (event.isPrimaryButtonDown()) {
-                if (event.isShiftDown()) {
-                    // Pan
+                if (projectionMode == ProjectionMode.ORTHOGRAPHIC_2D || event.isShiftDown()) {
+                    // 2D mode or Shift+drag: always pan
                     float sensitivity = 0.02f * camera.distance();
                     camera.pan((float) (-dx * sensitivity), (float) (dy * sensitivity), 0);
                 } else {
-                    // Rotate
+                    // 3D mode: rotate
                     camera.rotateAzimuth((float) Math.toRadians(-dx * 0.5));
                     camera.rotateElevation((float) Math.toRadians(-dy * 0.5));
                 }

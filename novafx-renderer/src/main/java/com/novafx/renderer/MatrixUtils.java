@@ -62,6 +62,34 @@ public final class MatrixUtils {
     }
 
     /**
+     * Builds an orthographic projection matrix.
+     * <p>
+     * Maps world coordinates to normalized device coordinates [-1, 1]
+     * without perspective division.  Useful for 2D views and isometric
+     * projections.
+     *
+     * @param left   left clipping plane
+     * @param right  right clipping plane
+     * @param bottom bottom clipping plane
+     * @param top    top clipping plane
+     * @param near   near clipping plane
+     * @param far    far clipping plane
+     * @return column-major orthographic projection matrix
+     */
+    public static float[] orthographic(float left, float right,
+                                        float bottom, float top,
+                                        float near, float far) {
+        float[] m = identity();
+        m[0] = 2f / (right - left);
+        m[5] = 2f / (top - bottom);
+        m[10] = -2f / (far - near);
+        m[12] = -(right + left) / (right - left);
+        m[13] = -(top + bottom) / (top - bottom);
+        m[14] = -(far + near) / (far - near);
+        return m;
+    }
+
+    /**
      * Builds a look-at view matrix.
      *
      * @param eyeX   camera position x

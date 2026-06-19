@@ -8,10 +8,14 @@ package com.novafx.renderer;
  *   <li>Rotation via azimuth (horizontal) and elevation (vertical) angles</li>
  *   <li>Zoom by adjusting distance from the target</li>
  *   <li>Pan by moving the target point</li>
+ *   <li>Perspective and orthographic projection modes</li>
  * </ul>
  * Angles are in radians. All mutations return {@code this} for chaining.
  */
 public final class Camera {
+
+    /** Projection type: perspective (3D) or orthographic (2D). */
+    public enum ProjectionType { PERSPECTIVE, ORTHOGRAPHIC }
 
     private float azimuth;
     private float elevation;
@@ -22,6 +26,7 @@ public final class Camera {
     private float fovDegrees;
     private float nearPlane;
     private float farPlane;
+    private ProjectionType projectionType = ProjectionType.PERSPECTIVE;
 
     /** Creates a default camera at a 45-degree view of the origin. */
     public Camera() {
@@ -36,6 +41,17 @@ public final class Camera {
         this.farPlane = 1000f;
     }
 
+    // ---- Projection type ----
+
+    public ProjectionType projectionType() {
+        return projectionType;
+    }
+
+    public Camera setProjectionType(ProjectionType type) {
+        this.projectionType = type;
+        return this;
+    }
+
     // ---- Rotation ----
 
     /** Horizontal rotation angle in radians. */
@@ -48,11 +64,19 @@ public final class Camera {
         return elevation;
     }
 
+    public Camera setAzimuth(float radians) {
+        this.azimuth = radians;
+        return this;
+    }
+
+    public Camera setElevation(float radians) {
+        float maxElev = (float) Math.toRadians(89);
+        this.elevation = Math.max(-maxElev, Math.min(maxElev, radians));
+        return this;
+    }
+
     /**
      * Adds to the azimuth angle.
-     *
-     * @param deltaRadians change in azimuth in radians
-     * @return this
      */
     public Camera rotateAzimuth(float deltaRadians) {
         this.azimuth += deltaRadians;
@@ -61,9 +85,6 @@ public final class Camera {
 
     /**
      * Adds to the elevation angle, clamping to ±89°.
-     *
-     * @param deltaRadians change in elevation in radians
-     * @return this
      */
     public Camera rotateElevation(float deltaRadians) {
         float maxElev = (float) Math.toRadians(89);
@@ -79,11 +100,13 @@ public final class Camera {
         return distance;
     }
 
+    public Camera setDistance(float d) {
+        this.distance = Math.max(0.5f, d);
+        return this;
+    }
+
     /**
      * Adds to the distance (positive = zoom out).
-     *
-     * @param delta change in distance
-     * @return this
      */
     public Camera zoom(float delta) {
         this.distance = Math.max(0.5f, this.distance + delta);
@@ -109,11 +132,6 @@ public final class Camera {
 
     /**
      * Translates the orbit target (pan).
-     *
-     * @param dx x offset
-     * @param dy y offset
-     * @param dz z offset
-     * @return this
      */
     public Camera pan(float dx, float dy, float dz) {
         this.targetX += dx;
@@ -143,8 +161,6 @@ public final class Camera {
 
     /**
      * Computes the view matrix based on current orbit parameters.
-     *
-     * @return column-major 4x4 view matrix
      */
     public float[] viewMatrix() {
         float ex = (float) (distance * Math.cos(elevation) * Math.sin(azimuth));
@@ -158,20 +174,27 @@ public final class Camera {
     }
 
     /**
-     * Computes the perspective projection matrix for the given aspect ratio.
+     * Computes the projection matrix for the current projection type.
      *
      * @param aspect viewport width / height
      * @return column-major 4x4 projection matrix
      */
     public float[] projectionMatrix(float aspect) {
+        if (projectionType == ProjectionType.ORTHOGRAPHIC) {
+            // Scale orthographic bounds by distance for zoom-like behavior
+            float halfHeight = distance * 0.7f;
+            float halfWidth = halfHeight * aspect;
+            return MatrixUtils.orthographic(
+                    -halfWidth, halfWidth,
+                    -halfHeight, halfHeight,
+                    nearPlane, farPlane
+            );
+        }
         return MatrixUtils.perspective(fovDegrees, aspect, nearPlane, farPlane);
     }
 
     /**
      * Computes the combined view-projection matrix.
-     *
-     * @param aspect viewport aspect ratio
-     * @return column-major 4x4 VP matrix
      */
     public float[] viewProjectionMatrix(float aspect) {
         return MatrixUtils.multiply(projectionMatrix(aspect), viewMatrix());
@@ -179,8 +202,6 @@ public final class Camera {
 
     /**
      * Resets the camera to its default position.
-     *
-     * @return this
      */
     public Camera reset() {
         this.azimuth = (float) Math.toRadians(45);
@@ -189,6 +210,7 @@ public final class Camera {
         this.targetX = 0;
         this.targetY = 0;
         this.targetZ = 0;
+        this.projectionType = ProjectionType.PERSPECTIVE;
         return this;
     }
 }

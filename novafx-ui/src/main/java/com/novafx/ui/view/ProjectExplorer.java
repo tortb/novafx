@@ -177,7 +177,7 @@ public final class ProjectExplorer extends VBox {
         Button newProjectBtn = new Button("+  " + I18n.get("panel.explorer.newProject"));
         newProjectBtn.setStyle(
                 "-fx-background-color: transparent;"
-                        + "-fx-text-fill: #F97316;"
+                        + "-fx-text-fill: #A855F7;"
                         + "-fx-font-size: 12;"
                         + "-fx-border-color: #262626;"
                         + "-fx-border-radius: 4;"
@@ -446,7 +446,7 @@ public final class ProjectExplorer extends VBox {
             }
 
             iconLabel.setText(iconFor(node.nodeType()));
-            iconLabel.setStyle("-fx-text-fill: #F97316; -fx-font-size: 14;");
+            iconLabel.setStyle("-fx-text-fill: #A855F7; -fx-font-size: 14;");
 
             nameLabel.setText(localizedName(node));
             nameLabel.setStyle("-fx-text-fill: #CCCCCC; -fx-font-size: 14;");

@@ -3,26 +3,22 @@ package com.novafx.ui.view;
 import com.novafx.core.domain.Project;
 import com.novafx.core.error.ProjectError;
 import com.novafx.core.workspace.ProjectNode;
-import com.novafx.core.workspace.ProjectNodeType;
 import com.novafx.core.workspace.ProjectTreeModel;
-import com.novafx.core.workspace.Workspace;
-import com.novafx.function.Parameter;
 import com.novafx.math.FunctionDefinition;
 import com.novafx.project.DefaultPlatformService;
+import com.novafx.renderer.Camera;
 import com.novafx.project.io.NfxcReader;
 import com.novafx.project.model.CompiledPointCloud;
-import com.novafx.project.workspace.WorkspaceLoader;
 import com.novafx.ui.command.UpdateFunctionCommand;
 import com.novafx.ui.controller.MainController;
 import com.novafx.ui.i18n.I18n;
 import com.novafx.ui.view.dialog.NewProjectDialog;
 import javafx.application.Platform;
-import javafx.scene.Scene;
 import javafx.geometry.Orientation;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.*;
 import javafx.scene.layout.*;
-import javafx.scene.input.KeyCombination;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
@@ -39,36 +35,41 @@ import java.util.List;
  * 布局：
  * <pre>
  * ┌──────────────────────────────────────────────────┐
- * │ 菜单栏                                             │
+ * │ TopBar                                            │
  * ├────────┬──────────────────────┬──────────────────┤
  * │ 资源    │                      │  属性面板          │
  * │ 管理器  │     3D 视口          │  参数面板          │
  * │ (220px)│                      │                   │
  * ├────────┴──────────────────────┴──────────────────┤
- * │ 函数编辑器（简易 / 专业 / LaTeX）                    │
+ * │ ExpressionPanel (表达式输入 + 数学键盘)             │
  * └──────────────────────────────────────────────────┘
  * </pre>
- * <p>
- * 左侧 {@link ProjectExplorer} 管理 .nfx 工程树，替代旧版预设卡片面板。
  */
 public final class MainWindow {
 
     private static final Logger log = LoggerFactory.getLogger(MainWindow.class);
     private static final int WIDTH = 1400;
     private static final int HEIGHT = 850;
+    private static final int LEFT_WIDTH = 220;
+    private static final int RIGHT_WIDTH = 220;
 
     private final Stage stage;
     private final MainController controller;
 
+    private final TopBar topBar;
     private final ProjectExplorer projectExplorer;
+    private final ExpressionPanel expressionPanel;
     private final CanvasViewport canvasViewport;
-    private final FunctionEditor functionEditor;
     private final PropertyPanel propertyPanel;
-    private final PresetPanel presetPanel;
     private final ParameterPanel parameterPanel;
+    private final PresetPanel presetPanel;
     private final CommandPalette commandPalette;
 
     private final Label statusLabel = new Label();
+    private final VBox rightPanel;
+
+    private boolean leftVisible = true;
+    private boolean rightVisible = true;
 
     /** 创建主窗口。 */
     public MainWindow(Stage stage) {
@@ -77,15 +78,19 @@ public final class MainWindow {
 
         I18n.loadPreference(new DefaultPlatformService().configDirectory());
 
+        this.topBar = new TopBar();
         this.canvasViewport = new CanvasViewport();
-        this.functionEditor = new FunctionEditor();
+        this.expressionPanel = new ExpressionPanel();
         this.propertyPanel = new PropertyPanel();
         this.parameterPanel = new ParameterPanel();
 
-        // Project Explorer (replaces old preset grid as the left panel)
+        // Project Explorer
         this.projectExplorer = new ProjectExplorer();
+
+        // Presets (kept for gallery / File > New)
         this.presetPanel = new PresetPanel(controller.getPresetNames());
 
+        // Command palette
         this.commandPalette = new CommandPalette(
                 this::handleNew,
                 this::handleOpen,
@@ -93,6 +98,10 @@ public final class MainWindow {
                 () -> handleExport("JSON (*.json)", "*.json", controller::exportJson),
                 () -> handleExport("MCFunction (*.mcfunction)", "*.mcfunction", controller::exportMcFunction)
         );
+
+        // Right panel
+        rightPanel = new VBox(0, propertyPanel, parameterPanel);
+        rightPanel.setPrefWidth(RIGHT_WIDTH);
 
         BorderPane root = buildLayout();
         Scene scene = new Scene(root, WIDTH, HEIGHT);
@@ -113,7 +122,7 @@ public final class MainWindow {
 
         // ── 启动：加载预设 "Spiral" 作为首个工程 ──────────
         controller.applyPreset("Spiral");
-        functionEditor.loadDefinition(controller.getCurrentDefinition());
+        expressionPanel.loadDefinition(controller.getCurrentDefinition());
 
         // 将 workspace 绑定到 explorer 和 command palette
         projectExplorer.setWorkspace(controller.getWorkspace());
@@ -130,14 +139,14 @@ public final class MainWindow {
             }
         });
 
-        // 展开并选中 Function 节点，方便查看
+        // 展开并选中 Function 节点
         Project current = controller.getCurrentProject();
         if (current != null) {
             projectExplorer.revealNode(current.id().toString(), "function");
         }
 
         stage.show();
-        log.info("MainWindow opened");
+        log.info("MainWindow opened (new layout)");
     }
 
     // ---------------------------------------------------------------
@@ -147,19 +156,17 @@ public final class MainWindow {
     private BorderPane buildLayout() {
         BorderPane root = new BorderPane();
 
-        root.setTop(buildMenuBar());
+        root.setTop(topBar);
         root.setLeft(projectExplorer);
-
-        VBox rightPanel = new VBox(0, propertyPanel, parameterPanel);
-        rightPanel.setPrefWidth(220);
-        root.setRight(rightPanel);
 
         SplitPane splitPane = new SplitPane();
         splitPane.setOrientation(Orientation.VERTICAL);
         splitPane.setStyle("-fx-background-color: #0A0A0A;");
-        splitPane.getItems().addAll(canvasViewport, functionEditor);
-        splitPane.setDividerPositions(0.75);
+        splitPane.getItems().addAll(canvasViewport, expressionPanel);
+        splitPane.setDividerPositions(0.70);
         root.setCenter(splitPane);
+
+        root.setRight(rightPanel);
 
         // 底部状态栏
         HBox statusBar = new HBox(8);
@@ -176,75 +183,44 @@ public final class MainWindow {
     }
 
     // ---------------------------------------------------------------
-    // 菜单栏
-    // ---------------------------------------------------------------
-
-    private MenuBar buildMenuBar() {
-        MenuBar menuBar = new MenuBar();
-
-        // ── 文件 ──
-        Menu fileMenu = new Menu(I18n.get("menu.file"));
-
-        MenuItem newItem = new MenuItem(I18n.get("menu.file.new"));
-        newItem.setAccelerator(KeyCombination.keyCombination("Ctrl+N"));
-        newItem.setOnAction(e -> handleNew());
-
-        MenuItem openItem = new MenuItem(I18n.get("menu.file.open"));
-        openItem.setAccelerator(KeyCombination.keyCombination("Ctrl+O"));
-        openItem.setOnAction(e -> handleOpen());
-
-        MenuItem saveItem = new MenuItem(I18n.get("menu.file.save"));
-        saveItem.setAccelerator(KeyCombination.keyCombination("Ctrl+S"));
-        saveItem.setOnAction(e -> handleSave());
-
-        MenuItem saveAsItem = new MenuItem(I18n.get("menu.file.saveAs"));
-        saveAsItem.setAccelerator(KeyCombination.keyCombination("Ctrl+Shift+S"));
-        saveAsItem.setOnAction(e -> handleSaveAs());
-
-        MenuItem compileItem = new MenuItem(I18n.get("menu.file.compile"));
-        compileItem.setAccelerator(KeyCombination.keyCombination("Ctrl+B"));
-        compileItem.setOnAction(e -> handleCompile());
-
-        Menu exportMenu = new Menu(I18n.get("menu.file.export"));
-        MenuItem csvItem = new MenuItem(I18n.get("menu.file.export.csv"));
-        csvItem.setOnAction(e -> handleExport("CSV (*.csv)", "*.csv", controller::exportCsv));
-        MenuItem jsonItem = new MenuItem(I18n.get("menu.file.export.json"));
-        jsonItem.setOnAction(e -> handleExport("JSON (*.json)", "*.json", controller::exportJson));
-        MenuItem mcItem = new MenuItem(I18n.get("menu.file.export.mcfunction"));
-        mcItem.setOnAction(e -> handleExport("MCFunction (*.mcfunction)", "*.mcfunction", controller::exportMcFunction));
-        exportMenu.getItems().addAll(csvItem, jsonItem, mcItem);
-
-        MenuItem exitItem = new MenuItem(I18n.get("menu.file.exit"));
-        exitItem.setOnAction(e -> Platform.exit());
-
-        fileMenu.getItems().addAll(
-                newItem, openItem, saveItem, saveAsItem,
-                new SeparatorMenuItem(), compileItem,
-                new SeparatorMenuItem(), exportMenu,
-                new SeparatorMenuItem(), exitItem
-        );
-
-        // ── 视图 ──
-        Menu viewMenu = new Menu(I18n.get("menu.view"));
-        MenuItem resetCam = new MenuItem(I18n.get("menu.view.resetCamera"));
-        resetCam.setOnAction(e -> canvasViewport.resetCamera());
-        viewMenu.getItems().add(resetCam);
-
-        // ── 帮助 ──
-        Menu helpMenu = new Menu(I18n.get("menu.help"));
-        MenuItem aboutItem = new MenuItem(I18n.get("menu.help.about"));
-        aboutItem.setOnAction(e -> showAbout());
-        helpMenu.getItems().add(aboutItem);
-
-        menuBar.getMenus().addAll(fileMenu, viewMenu, helpMenu);
-        return menuBar;
-    }
-
-    // ---------------------------------------------------------------
     // 绑定
     // ---------------------------------------------------------------
 
     private void setupBindings() {
+        // ── TopBar ────────────────────────────────────────────
+        topBar.setProjectName(controller.getCurrentProject() != null
+                ? controller.getCurrentProject().name() : null);
+        topBar.setOnNewProject(this::handleNew);
+        topBar.setOnOpenProject(this::handleOpen);
+        topBar.setOnSaveProject(this::handleSave);
+        topBar.setOnUndo(() -> controller.getCommandBus().undo());
+        topBar.setOnRedo(() -> controller.getCommandBus().redo());
+        topBar.setOnToggleLeftPanel(this::toggleLeftPanel);
+        topBar.setOnToggleRightPanel(this::toggleRightPanel);
+        topBar.setOn2DMode(() -> {
+            canvasViewport.setProjectionMode(CanvasViewport.ProjectionMode.ORTHOGRAPHIC_2D);
+            statusLabel.setText("2D 模式");
+        });
+        topBar.setOn3DMode(() -> {
+            canvasViewport.setProjectionMode(CanvasViewport.ProjectionMode.PERSPECTIVE_3D);
+            statusLabel.setText("3D 模式");
+        });
+        topBar.setOnCameraPreset(preset -> {
+            var cam = canvasViewport.camera();
+            boolean was3d = canvasViewport.getProjectionMode() == CanvasViewport.ProjectionMode.PERSPECTIVE_3D;
+            cam.setProjectionType(was3d
+                    ? Camera.ProjectionType.PERSPECTIVE
+                    : Camera.ProjectionType.ORTHOGRAPHIC);
+            switch (preset) {
+                case TOP -> { cam.setAzimuth(0).setElevation((float) Math.toRadians(89)).setDistance(8f); }
+                case FRONT -> { cam.setAzimuth(0).setElevation(0).setDistance(12f); }
+                case SIDE -> { cam.setAzimuth((float) Math.toRadians(90)).setElevation(0).setDistance(12f); }
+                case PERSPECTIVE -> { cam.reset(); }
+                case ISOMETRIC -> { cam.setAzimuth((float) Math.toRadians(45)).setElevation((float) Math.toRadians(35.264f)).setDistance(12f); }
+            }
+            statusLabel.setText("视角: " + preset);
+        });
+
         // ── Project Explorer ───────────────────────────────────
         projectExplorer.setOnNodeSelected(node -> {
             statusLabel.setText(I18n.format("status.editing", node.displayName()));
@@ -263,13 +239,12 @@ public final class MainWindow {
                 case "copyExpr" -> {
                     String expr = node.data();
                     if (expr != null && !expr.isBlank()) {
-                        javafx.scene.input.Clipboard clipboard =
-                                javafx.scene.input.Clipboard.getSystemClipboard();
+                        Clipboard clipboard = Clipboard.getSystemClipboard();
                         ClipboardContent content = new ClipboardContent();
                         content.putString(expr);
                         clipboard.setContent(content);
                         statusLabel.setText(I18n.format("status.copied", expr));
-                        statusLabel.setStyle("-fx-text-fill: #F97316; -fx-font-size: 10;");
+                        statusLabel.setStyle("-fx-text-fill: #A855F7; -fx-font-size: 10;");
                     }
                 }
                 case "editParameter" -> {
@@ -284,26 +259,27 @@ public final class MainWindow {
                 case "cameraSettings" -> {
                     canvasViewport.requestFocus();
                     statusLabel.setText(I18n.get("status.camera"));
-                    statusLabel.setStyle("-fx-text-fill: #F97316; -fx-font-size: 10;");
+                    statusLabel.setStyle("-fx-text-fill: #A855F7; -fx-font-size: 10;");
                 }
                 case "renderSettings" -> {
                     propertyPanel.requestFocus();
                     statusLabel.setText(I18n.get("status.render"));
-                    statusLabel.setStyle("-fx-text-fill: #F97316; -fx-font-size: 10;");
+                    statusLabel.setStyle("-fx-text-fill: #A855F7; -fx-font-size: 10;");
                 }
                 case "browsePresets" -> showPresetGallery();
                 default -> statusLabel.setText(I18n.get("status.editing") + ": " + action);
             }
         });
 
-        // keep preset panel functional (used by File > New menu)
+        // keep preset panel functional (used by File > New)
         presetPanel.setOnPresetSelected(name -> {
             FunctionDefinition def = controller.applyPreset(name);
-            functionEditor.loadDefinition(def);
+            expressionPanel.loadDefinition(def);
             canvasViewport.setPoints(controller.getCurrentPoints());
             statusLabel.setText(I18n.format("status.preset", name));
+            topBar.setProjectName(controller.getCurrentProject() != null
+                    ? controller.getCurrentProject().name() : null);
 
-            // reveal in explorer
             Project current = controller.getCurrentProject();
             if (current != null) {
                 projectExplorer.revealNode(current.id().toString(), "function");
@@ -314,8 +290,8 @@ public final class MainWindow {
                 controller.saveCurrentAsPreset(controller.getCurrentDefinition().xExpression())
         );
 
-        // ── 函数编辑器（通过 CommandBus 支持 Undo）──────────
-        functionEditor.setOnFunctionChanged(def -> {
+        // ── 表达式面板（通过 CommandBus 支持 Undo）──────────
+        expressionPanel.setOnFunctionChanged(def -> {
             var cmd = new UpdateFunctionCommand(controller,
                     def.xExpression(), def.yExpression(), def.zExpression(),
                     def.start(), def.end(), def.step());
@@ -323,7 +299,7 @@ public final class MainWindow {
         });
 
         // 即时错误反馈
-        functionEditor.setOnError(err -> {
+        expressionPanel.setOnError(err -> {
             Platform.runLater(() -> {
                 if (err != null && !err.isBlank()) {
                     statusLabel.setText("⚠ " + err);
@@ -344,6 +320,8 @@ public final class MainWindow {
                     statusLabel.setText(I18n.format("status.points", pts.size()));
                     statusLabel.setStyle("-fx-text-fill: #555; -fx-font-size: 10;");
                     updateTitle();
+                    topBar.setProjectName(controller.getCurrentProject() != null
+                            ? controller.getCurrentProject().name() : null);
                 })
         );
 
@@ -360,7 +338,7 @@ public final class MainWindow {
                     for (ProjectError err : errors) {
                         if (err.isWarning()) {
                             statusLabel.setText("⚠ " + err.message());
-                            statusLabel.setStyle("-fx-text-fill: #F97316; -fx-font-size: 10;");
+                            statusLabel.setStyle("-fx-text-fill: #A855F7; -fx-font-size: 10;");
                             return;
                         }
                     }
@@ -383,7 +361,7 @@ public final class MainWindow {
     }
 
     // ---------------------------------------------------------------
-    //  节点导航 — 双击树节点时的行为
+    //  节点导航
     // ---------------------------------------------------------------
 
     private void navigateToNode(ProjectNode node) {
@@ -394,9 +372,7 @@ public final class MainWindow {
             case Y_EXPR -> focusExpression('y', node);
             case Z_EXPR -> focusExpression('z', node);
             case PARAMETER -> {
-                // 跳转到参数面板
                 parameterPanel.requestFocus();
-                // 尝试选中对应参数控件
                 String paramName = node.data();
                 if (paramName != null) {
                     parameterPanel.highlightParameter(paramName);
@@ -411,36 +387,30 @@ public final class MainWindow {
                 propertyPanel.requestFocus();
                 statusLabel.setText(I18n.get("status.render"));
             }
-            case PRESETS -> {
-                // 显示预设选择对话框
-                showPresetGallery();
-            }
-            default -> {
-                // 容器节点仅展开/折叠, 不导航
-            }
+            case PRESETS -> showPresetGallery();
+            default -> { }
         }
     }
 
     private void focusExpression(char axis, ProjectNode node) {
-        functionEditor.focusExpression(axis);
+        expressionPanel.focusExpression(axis);
         statusLabel.setText(I18n.format("status.editing", node.displayName()));
-        statusLabel.setStyle("-fx-text-fill: #F97316; -fx-font-size: 10;");
+        statusLabel.setStyle("-fx-text-fill: #A855F7; -fx-font-size: 10;");
     }
 
     private void showPresetGallery() {
-        // 在当前窗口展示预设选择
-        // 复用选定的回调
         presetPanel.setOnPresetSelected(name -> {
             FunctionDefinition def = controller.applyPreset(name);
-            functionEditor.loadDefinition(def);
+            expressionPanel.loadDefinition(def);
             canvasViewport.setPoints(controller.getCurrentPoints());
             statusLabel.setText(I18n.format("status.preset", name));
+            topBar.setProjectName(controller.getCurrentProject() != null
+                    ? controller.getCurrentProject().name() : null);
             Project current = controller.getCurrentProject();
             if (current != null) {
                 projectExplorer.revealNode(current.id().toString(), "function");
             }
         });
-        // 触发预设面板的焦点 (或可改为弹出窗口)
         presetPanel.requestFocus();
         statusLabel.setText(I18n.get("status.browsePresets"));
     }
@@ -450,20 +420,40 @@ public final class MainWindow {
     // ---------------------------------------------------------------
 
     private void setupKeyboard(Scene scene) {
-        // Ctrl+P 打开命令面板（搜索节点 / 命令）
         scene.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
+            // Ctrl+P — 命令面板
             if (e.isControlDown() && e.getCode() == KeyCode.P) {
                 commandPalette.show();
                 e.consume();
             }
-            // Ctrl+Z Undo
+            // Ctrl+Z — Undo
             if (e.isControlDown() && !e.isShiftDown() && e.getCode() == KeyCode.Z) {
                 controller.getCommandBus().undo();
                 e.consume();
             }
-            // Ctrl+Shift+Z Redo
+            // Ctrl+Shift+Z — Redo
             if (e.isControlDown() && e.isShiftDown() && e.getCode() == KeyCode.Z) {
                 controller.getCommandBus().redo();
+                e.consume();
+            }
+            // Ctrl+N — 新建
+            if (e.isControlDown() && e.getCode() == KeyCode.N) {
+                handleNew();
+                e.consume();
+            }
+            // Ctrl+O — 打开
+            if (e.isControlDown() && e.getCode() == KeyCode.O) {
+                handleOpen();
+                e.consume();
+            }
+            // Ctrl+S — 保存
+            if (e.isControlDown() && e.getCode() == KeyCode.S) {
+                handleSave();
+                e.consume();
+            }
+            // Ctrl+B — 编译
+            if (e.isControlDown() && e.getCode() == KeyCode.B) {
+                handleCompile();
                 e.consume();
             }
         });
@@ -528,19 +518,18 @@ public final class MainWindow {
 
         FunctionDefinition def;
         if ("Empty".equals(template)) {
-            def = new FunctionDefinition("t", "t", "0", 0, 10, 0.5);
             controller.newProject();
         } else {
             def = controller.applyPreset(template);
         }
 
-        // Apply the user-chosen project name
         controller.renameProject(projectName);
 
-        functionEditor.loadDefinition(controller.getCurrentDefinition());
+        expressionPanel.loadDefinition(controller.getCurrentDefinition());
         canvasViewport.setPoints(controller.getCurrentPoints());
-        functionEditor.clearErrors();
+        expressionPanel.clearError();
         statusLabel.setText(I18n.format("status.newProject", projectName));
+        topBar.setProjectName(projectName);
 
         Project current = controller.getCurrentProject();
         if (current != null) {
@@ -622,12 +611,13 @@ public final class MainWindow {
             }
 
             controller.loadProject(path);
-            functionEditor.loadDefinition(controller.getCurrentDefinition());
+            expressionPanel.loadDefinition(controller.getCurrentDefinition());
             canvasViewport.setPoints(controller.getCurrentPoints());
-            functionEditor.clearErrors();
+            expressionPanel.clearError();
             statusLabel.setText(I18n.format("status.loaded", path.getFileName()));
+            topBar.setProjectName(controller.getCurrentProject() != null
+                    ? controller.getCurrentProject().name() : null);
 
-            // reveal in explorer
             Project current = controller.getCurrentProject();
             if (current != null) {
                 projectExplorer.revealNode(current.id().toString(), "function");
@@ -658,10 +648,10 @@ public final class MainWindow {
         }
     }
 
-    /**
-     * Saves the project that owns the given tree node.
-     * If the project has no file path, delegates to Save-As.
-     */
+    // ---------------------------------------------------------------
+    // 工程树上下文操作
+    // ---------------------------------------------------------------
+
     private void handleContextSave(ProjectNode node) {
         var model = findProjectByNodeId(node.id());
         if (model.isEmpty()) return;
@@ -673,21 +663,15 @@ public final class MainWindow {
             controller.saveProject(project, path);
             statusLabel.setText(I18n.format("status.savedTo", path.getFileName()));
         } else {
-            // No path → trigger Save As for the current project
-            // (switch to it first so Save As picks up the right name)
             controller.selectProject(model.get());
             handleSaveAs();
         }
     }
 
-    /**
-     * Shows a rename dialog for the project that owns the given node.
-     */
     private void handleContextRename(ProjectNode node) {
         var model = findProjectByNodeId(node.id());
         if (model.isEmpty()) return;
 
-        // Switch to this project so the rename targets it
         controller.selectProject(model.get());
 
         TextInputDialog dialog = new TextInputDialog(model.get().project().name());
@@ -697,45 +681,30 @@ public final class MainWindow {
         dialog.showAndWait().ifPresent(name -> {
             if (!name.isBlank()) {
                 controller.renameProject(name.trim());
-                // The workspace tree rebuilds automatically via the
-                // ProjectChanged callback
                 statusLabel.setText(I18n.format("status.renamed", name.trim()));
+                topBar.setProjectName(name.trim());
             }
         });
     }
 
-    /**
-     * Removes a parameter variable by substituting its current value
-     * into all three expressions.
-     */
     private void handleContextDeleteParameter(ProjectNode node) {
         String paramName = node.data();
         if (paramName == null || paramName.isBlank()) return;
 
-        // Find and switch to the owning project first
         var model = findProjectByNodeId(node.id());
         model.ifPresent(m -> controller.selectProject(m));
 
         controller.removeParameter(paramName);
         statusLabel.setText(I18n.format("status.removedParam", paramName));
-        statusLabel.setStyle("-fx-text-fill: #F97316; -fx-font-size: 10;");
+        statusLabel.setStyle("-fx-text-fill: #A855F7; -fx-font-size: 10;");
     }
 
-    /**
-     * Extracts the project UUID from a node id and looks up
-     * the corresponding ProjectTreeModel in the workspace.
-     */
     private java.util.Optional<ProjectTreeModel> findProjectByNodeId(String nodeId) {
         int slash = nodeId.indexOf('/');
         String projectId = slash > 0 ? nodeId.substring(0, slash) : nodeId;
         return controller.getWorkspace().findById(projectId);
     }
 
-    /**
-     * Closes the project that owns the given node and removes it
-     * from the workspace.  If it was the active project the UI resets
-     * to a fresh default.
-     */
     private void handleCloseProject(ProjectNode node) {
         var model = findProjectByNodeId(node.id());
         if (model.isEmpty()) return;
@@ -753,8 +722,10 @@ public final class MainWindow {
             } else {
                 controller.selectProject(ws.getProjects().get(0));
             }
-            functionEditor.loadDefinition(controller.getCurrentDefinition());
+            expressionPanel.loadDefinition(controller.getCurrentDefinition());
             canvasViewport.setPoints(controller.getCurrentPoints());
+            topBar.setProjectName(controller.getCurrentProject() != null
+                    ? controller.getCurrentProject().name() : null);
         }
         statusLabel.setText(I18n.format("status.closed", model.get().project().name()));
     }
@@ -774,6 +745,28 @@ public final class MainWindow {
             exporter.accept(file.toPath());
             statusLabel.setText(I18n.format("status.exported", file.getName()));
         }
+    }
+
+    // ---------------------------------------------------------------
+    // 面板折叠
+    // ---------------------------------------------------------------
+
+    private void toggleLeftPanel() {
+        leftVisible = !leftVisible;
+        double targetWidth = leftVisible ? LEFT_WIDTH : 0;
+        projectExplorer.setPrefWidth(targetWidth);
+        projectExplorer.setMinWidth(targetWidth);
+        projectExplorer.setVisible(leftVisible);
+        projectExplorer.setManaged(leftVisible);
+    }
+
+    private void toggleRightPanel() {
+        rightVisible = !rightVisible;
+        double targetWidth = rightVisible ? RIGHT_WIDTH : 0;
+        rightPanel.setPrefWidth(targetWidth);
+        rightPanel.setMinWidth(targetWidth);
+        rightPanel.setVisible(rightVisible);
+        rightPanel.setManaged(rightVisible);
     }
 
     // ---------------------------------------------------------------

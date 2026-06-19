@@ -165,7 +165,7 @@ public final class NewProjectDialog {
 
         var createBtn = new Button("创建");
         createBtn.setStyle(
-                "-fx-background-color: #F97316; -fx-border-color: #F97316;"
+                "-fx-background-color: #A855F7; -fx-border-color: #A855F7;"
                         + "-fx-border-radius: 4; -fx-background-radius: 4;"
                         + "-fx-text-fill: #FFF; -fx-font-size: 13; -fx-font-weight: bold;"
                         + "-fx-padding: 6 20; -fx-cursor: hand;");
@@ -231,7 +231,7 @@ public final class NewProjectDialog {
         card.setStyle(cardStyle(isSelected));
 
         var iconLabel = new Label(icon);
-        iconLabel.setStyle("-fx-font-size: 22; -fx-text-fill: " + (isSelected ? "#FFF" : "#F97316") + ";");
+        iconLabel.setStyle("-fx-font-size: 22; -fx-text-fill: " + (isSelected ? "#FFF" : "#A855F7") + ";");
 
         var nameLabel = new Label(label);
         nameLabel.setStyle("-fx-font-size: 11; -fx-text-fill: " + (isSelected ? "#FFF" : "#AAA") + ";");
@@ -280,7 +280,7 @@ public final class NewProjectDialog {
 
         old.setStyle(cardStyle(selected));
         iconLabel.setStyle("-fx-font-size: 22; -fx-text-fill: "
-                + (selected ? "#FFF" : "#F97316") + ";");
+                + (selected ? "#FFF" : "#A855F7") + ";");
         nameLabel.setStyle("-fx-font-size: 11; -fx-text-fill: "
                 + (selected ? "#FFF" : "#AAA") + ";");
 
@@ -289,8 +289,8 @@ public final class NewProjectDialog {
 
     private static String cardStyle(boolean selected) {
         if (selected) {
-            return "-fx-background-color: #F97316; -fx-background-radius: 6;"
-                    + "-fx-border-color: #F97316; -fx-border-radius: 6;"
+            return "-fx-background-color: #A855F7; -fx-background-radius: 6;"
+                    + "-fx-border-color: #A855F7; -fx-border-radius: 6;"
                     + "-fx-cursor: hand;";
         }
         return "-fx-background-color: #111111; -fx-background-radius: 6;"

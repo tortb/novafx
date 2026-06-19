@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════
    NovaFX Studio — 暗色主题
    配色:  BG #0A0A0A  面板 #111111  边框 #262626
-         文字 #FFF  次级文字 #A1A1AA  强调色 #F97316
+         文字 #FFF  次级文字 #A1A1AA  强调色 #A855F7（紫）
    圆角 8px  按钮/输入框 36px  统一间距
    ═══════════════════════════════════════════════ */
 
@@ -76,7 +76,7 @@
 }
 
 .text-field:focused {
-    -fx-border-color: #F97316;
+    -fx-border-color: #A855F7;
     -fx-border-width: 1.5;
 }
 
@@ -104,13 +104,13 @@
 }
 
 .button.primary {
-    -fx-background-color: #F97316;
-    -fx-border-color: #F97316;
+    -fx-background-color: #A855F7;
+    -fx-border-color: #A855F7;
     -fx-text-fill: #FFFFFF;
 }
 
 .button.primary:hover {
-    -fx-background-color: #EA580C;
+    -fx-background-color: #9333EA;
 }
 
 /* ── 滑块 ───────────────────────────────── */
@@ -121,14 +121,14 @@
 }
 
 .slider .thumb {
-    -fx-background-color: #F97316;
+    -fx-background-color: #A855F7;
     -fx-background-radius: 8;
     -fx-pref-width: 14;
     -fx-pref-height: 14;
 }
 
 .slider .thumb:hover {
-    -fx-background-color: #EA580C;
+    -fx-background-color: #9333EA;
 }
 
 /* ── 颜色选择器 ──────────────────────────── */
@@ -156,8 +156,8 @@
 }
 
 .check-box:selected .box {
-    -fx-background-color: #F97316;
-    -fx-border-color: #F97316;
+    -fx-background-color: #A855F7;
+    -fx-border-color: #A855F7;
 }
 
 .check-box:selected .mark {
@@ -238,7 +238,7 @@
 
 .tab:selected {
     -fx-background-color: #0A0A0A;
-    -fx-border-color: #F97316 #1A1A1A #0A0A0A #1A1A1A;
+    -fx-border-color: #A855F7 #1A1A1A #0A0A0A #1A1A1A;
     -fx-border-width: 2 1 0 1;
 }
 
@@ -263,7 +263,7 @@
 }
 
 .split-pane .split-pane-divider:hover {
-    -fx-background-color: #F97316;
+    -fx-background-color: #A855F7;
 }
 
 /* ── 滚动窗格 ────────────────────────────── */
@@ -290,8 +290,8 @@
 }
 
 .toggle-button:selected {
-    -fx-background-color: #F97316;
-    -fx-border-color: #F97316;
+    -fx-background-color: #A855F7;
+    -fx-border-color: #A855F7;
     -fx-text-fill: #FFFFFF;
     -fx-font-weight: bold;
 }
@@ -301,13 +301,13 @@
 }
 
 .toggle-button:selected:hover {
-    -fx-background-color: #EA580C;
+    -fx-background-color: #9333EA;
 }
 
 /* ═══════════════════════════════════════════════
    Project Explorer Tree
    配色:  BG 透明  行高 32px  字体 14px
-          hover #1A1A1A  选中 #F97316
+          hover #1A1A1A  选中 #A855F7
    参考 VSCode Explorer / JetBrains Project 面板
    ═══════════════════════════════════════════════ */
 
@@ -332,7 +332,7 @@
 
 #project-tree .tree-cell:filled:selected {
     -fx-background-color: #1A1A1A;
-    -fx-border-color: transparent transparent transparent #F97316;
+    -fx-border-color: transparent transparent transparent #A855F7;
     -fx-border-width: 0 0 0 2;
 }
 
@@ -351,7 +351,7 @@
 }
 
 #project-tree .tree-cell:filled:hover > .tree-disclosure-node > .arrow {
-    -fx-background-color: #F97316;
+    -fx-background-color: #A855F7;
 }
 
 /* Make the cell expand to full width */
@@ -377,4 +377,133 @@
 #project-tree .scroll-bar .decrement-button {
     -fx-background-color: transparent;
     -fx-padding: 0;
+}
+
+/* ═══════════════════════════════════════════════
+   NovaFX Input System v1 组件样式
+   ═══════════════════════════════════════════════ */
+
+/* ── Top Bar ─────────────────────────────── */
+.top-bar {
+    -fx-background-color: #0D0D0D;
+    -fx-border-color: #1A1A1A;
+    -fx-border-width: 0 0 1 0;
+    -fx-min-height: 40px;
+    -fx-padding: 0 8;
+}
+
+.top-bar-button {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-text-fill: #888;
+    -fx-font-size: 12px;
+    -fx-padding: 4 6;
+    -fx-min-height: 26px;
+    -fx-cursor: hand;
+}
+
+.top-bar-button:hover {
+    -fx-background-color: #1A1A1A;
+    -fx-text-fill: #CCC;
+}
+
+/* ── Expression Panel ────────────────────── */
+.expression-panel {
+    -fx-background-color: #0D0D0D;
+    -fx-border-color: #1A1A1A;
+    -fx-border-width: 1 0 0 0;
+    -fx-padding: 6 8 4 8;
+}
+
+.expression-field {
+    -fx-background-color: #1A1A1A;
+    -fx-border-color: #262626;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-text-fill: #FFFFFF;
+    -fx-font-family: "JetBrains Mono", "Consolas", monospace;
+    -fx-font-size: 14px;
+    -fx-padding: 6 10;
+    -fx-min-height: 36px;
+    -fx-pref-height: 36px;
+}
+
+.expression-field:focused {
+    -fx-border-color: #A855F7;
+    -fx-border-width: 1.5;
+}
+
+.expression-field:error {
+    -fx-border-color: #EF4444;
+    -fx-border-width: 1.5;
+}
+
+/* ── Math Keyboard ───────────────────────── */
+.math-keyboard {
+    -fx-background-color: #0D0D0D;
+    -fx-padding: 4 0 0 0;
+}
+
+.math-keyboard-tabs {
+    -fx-background-color: #0D0D0D;
+    -fx-tab-min-height: 28px;
+    -fx-tab-max-height: 28px;
+}
+
+.math-keyboard-tabs .tab-header-area {
+    -fx-background-color: #111111;
+    -fx-padding: 0;
+}
+
+.math-keyboard-tabs .tab {
+    -fx-background-color: #111111;
+    -fx-border-color: #1A1A1A;
+    -fx-border-width: 0 1 0 0;
+    -fx-padding: 4 16;
+}
+
+.math-keyboard-tabs .tab:selected {
+    -fx-background-color: #0D0D0D;
+    -fx-border-color: transparent transparent #A855F7 transparent;
+    -fx-border-width: 0 0 2 0;
+}
+
+.math-keyboard-tabs .tab .tab-label {
+    -fx-text-fill: #666666;
+    -fx-font-size: 11px;
+}
+
+.math-keyboard-tabs .tab:selected .tab-label {
+    -fx-text-fill: #FFFFFF;
+}
+
+.kb-button {
+    -fx-background-color: #1A1A1A;
+    -fx-border-color: #262626;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-text-fill: #CCC;
+    -fx-font-size: 13px;
+    -fx-font-family: "JetBrains Mono", "Consolas", monospace;
+    -fx-padding: 4 6;
+    -fx-min-width: 40px;
+    -fx-pref-width: 42px;
+    -fx-min-height: 30px;
+    -fx-cursor: hand;
+}
+
+.kb-button:hover {
+    -fx-background-color: #262626;
+    -fx-border-color: #A855F7;
+}
+
+.kb-button:pressed {
+    -fx-background-color: #333333;
+}
+
+/* ── Expression error ────────────────────── */
+.expression-error {
+    -fx-text-fill: #EF4444;
+    -fx-font-size: 11px;
+    -fx-padding: 2 0 0 48px;
 }
