@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: com.novafx.renderer.ProjectionUtilsTest
--------------------------------------------------------------------------------
-Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.214 s -- in com.novafx.renderer.ProjectionUtilsTest

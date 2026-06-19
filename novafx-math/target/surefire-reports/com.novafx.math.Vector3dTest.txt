@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: com.novafx.math.Vector3dTest
--------------------------------------------------------------------------------
-Tests run: 14, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.230 s -- in com.novafx.math.Vector3dTest

@@ -1,5 +1,0 @@
-GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
-NovaFX Project,com.novafx.project,NovaFxProjectFile,0,76,0,0,0,32,0,16,0,16
-NovaFX Project,com.novafx.project,NovaFxProjectFile.FunctionData,0,98,0,0,0,32,0,16,0,16
-NovaFX Project,com.novafx.project,DefaultPlatformService,56,72,10,6,6,16,8,8,0,8
-NovaFX Project,com.novafx.project,JacksonProjectRepository,66,193,1,7,18,55,2,13,1,10

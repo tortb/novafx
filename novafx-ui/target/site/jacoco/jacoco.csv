@@ -1,7 +1,0 @@
-GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
-NovaFX UI,com.novafx.ui.view,ViewportCanvas,529,0,20,0,107,0,24,0,14,0
-NovaFX UI,com.novafx.ui.view,MainWindow,491,0,2,0,89,0,23,0,22,0
-NovaFX UI,com.novafx.ui.view,FunctionEditor,360,0,10,0,50,0,14,0,9,0
-NovaFX UI,com.novafx.ui.view,PresetPanel,80,0,4,0,19,0,5,0,3,0
-NovaFX UI,com.novafx.ui.view,PropertyPanel,164,0,6,0,32,0,10,0,7,0
-NovaFX UI,com.novafx.ui.controller,MainController,60,175,6,10,18,46,11,14,7,10
