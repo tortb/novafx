@@ -38,12 +38,18 @@ public final class CanvasViewport extends Canvas {
     private final AnimationTimer renderLoop;
 
     private List<Vector3d> points = List.of();
+    private int pointCount = 0;
     private float pointSize = 2.0f;
     private Color pointColor = Color.CORNFLOWERBLUE;
     private boolean showGrid = true;
 
     private double mouseX;
     private double mouseY;
+
+    // FPS tracking
+    private long lastFrameTime = 0;
+    private int frameCount = 0;
+    private double currentFps = 0;
 
     // Grid geometry (precomputed in world space)
     private static final float GRID_SIZE = 10f;
@@ -64,6 +70,15 @@ public final class CanvasViewport extends Canvas {
         this.renderLoop = new AnimationTimer() {
             @Override
             public void handle(long now) {
+                // FPS calculation (nanoseconds → updates per second)
+                if (lastFrameTime > 0) {
+                    double dt = (now - lastFrameTime) / 1_000_000_000.0;
+                    if (dt > 0) {
+                        currentFps = 0.9 * currentFps + 0.1 / dt;
+                    }
+                }
+                lastFrameTime = now;
+                frameCount++;
                 render();
             }
         };
@@ -81,6 +96,7 @@ public final class CanvasViewport extends Canvas {
      */
     public void setPoints(List<Vector3d> newPoints) {
         this.points = newPoints != null ? newPoints : List.of();
+        this.pointCount = this.points.size();
     }
 
     /** Sets point size in pixels. */
@@ -129,6 +145,9 @@ public final class CanvasViewport extends Canvas {
 
         // Render points
         renderPoints(gc, vpMatrix, (int) w, (int) h);
+
+        // FPS overlay
+        renderFpsOverlay(gc, (int) w);
     }
 
     private void renderPoints(GraphicsContext gc, float[] vpMatrix, int w, int h) {
@@ -146,6 +165,13 @@ public final class CanvasViewport extends Canvas {
                 gc.fillRect(screen[0] - halfSize, screen[1] - halfSize, size, size);
             }
         }
+    }
+
+    private void renderFpsOverlay(GraphicsContext gc, int w) {
+        String fpsText = String.format("FPS %.0f  |  点数 %d", currentFps, pointCount);
+        gc.setFill(Color.rgb(160, 160, 160, 0.85));
+        gc.setFont(javafx.scene.text.Font.font("monospace", 11));
+        gc.fillText(fpsText, w - 220, 22);
     }
 
     private void renderGrid(GraphicsContext gc, float[] vpMatrix, int w, int h) {

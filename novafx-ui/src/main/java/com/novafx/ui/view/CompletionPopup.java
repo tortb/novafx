@@ -3,6 +3,7 @@ package com.novafx.ui.view;
 import com.novafx.function.CompletionEngine;
 import com.novafx.function.CompletionKind;
 import com.novafx.function.CompletionItem;
+import com.novafx.ui.i18n.I18n;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
@@ -187,10 +188,10 @@ public final class CompletionPopup {
 
         private static String kindTag(CompletionKind kind) {
             return switch (kind) {
-                case FUNCTION -> "fn ";
-                case VARIABLE -> "var ";
-                case CONSTANT -> "cst ";
-                case SNIPPET -> "snip ";
+                case FUNCTION -> I18n.get("completion.fn") + " ";
+                case VARIABLE -> I18n.get("completion.var") + " ";
+                case CONSTANT -> I18n.get("completion.cst") + " ";
+                case SNIPPET -> I18n.get("completion.snip") + " ";
             };
         }
 

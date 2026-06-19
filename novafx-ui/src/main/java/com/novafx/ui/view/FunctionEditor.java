@@ -1,6 +1,7 @@
 package com.novafx.ui.view;
 
 import com.novafx.math.FunctionDefinition;
+import com.novafx.ui.i18n.I18n;
 import javafx.geometry.Insets;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
@@ -40,12 +41,12 @@ public final class FunctionEditor extends GridPane {
         setVgap(6);
         setPadding(new Insets(10));
 
-        addRow(0, label("X(t) ="), xField);
-        addRow(1, label("Y(t) ="), yField);
-        addRow(2, label("Z(t) ="), zField);
-        addRow(3, label("Start"), startField);
-        addRow(4, label("End"), endField);
-        addRow(5, label("Step"), stepField);
+        addRow(0, label(I18n.get("editor.x")), xField);
+        addRow(1, label(I18n.get("editor.y")), yField);
+        addRow(2, label(I18n.get("editor.z")), zField);
+        addRow(3, label(I18n.get("editor.start")), startField);
+        addRow(4, label(I18n.get("editor.end")), endField);
+        addRow(5, label(I18n.get("editor.step")), stepField);
 
         // Make text fields expand horizontally
         for (var field : new TextField[]{xField, yField, zField, startField, endField, stepField}) {

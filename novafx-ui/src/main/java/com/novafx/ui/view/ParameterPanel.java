@@ -1,6 +1,7 @@
 package com.novafx.ui.view;
 
 import com.novafx.function.Parameter;
+import com.novafx.ui.i18n.I18n;
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
@@ -28,7 +29,7 @@ public final class ParameterPanel extends VBox {
         setPrefWidth(220);
         setMinWidth(160);
 
-        Label header = new Label("Parameters");
+        Label header = new Label(I18n.get("panel.parameters"));
         header.setStyle("-fx-font-size: 14; -fx-font-weight: bold;");
         getChildren().add(header);
     }
@@ -52,7 +53,7 @@ public final class ParameterPanel extends VBox {
         getChildren().removeIf(node -> node instanceof ParameterSlider);
 
         if (parameters == null || parameters.isEmpty()) {
-            Label empty = new Label("None");
+            Label empty = new Label(I18n.get("panel.parameters.none"));
             empty.setStyle("-fx-text-fill: #666;");
             getChildren().add(empty);
             return;

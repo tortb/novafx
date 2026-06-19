@@ -1,0 +1,265 @@
+/* ═══════════════════════════════════════════════
+   NovaFX Studio — Dark Theme
+   Colors:  BG #0A0A0A  Panel #111111  Border #262626
+            Text #FFF  TextSec #A1A1AA  Accent #F97316
+   ═══════════════════════════════════════════════ */
+
+/* ── Root ──────────────────────────────────── */
+.root {
+    -fx-background-color: #0A0A0A;
+    -fx-font-family: "Microsoft YaHei UI", "Noto Sans SC", "PingFang SC", sans-serif;
+    -fx-font-size: 13px;
+    -fx-text-fill: #FFFFFF;
+}
+
+/* ── Menu Bar ──────────────────────────────── */
+.menu-bar {
+    -fx-background-color: #0D0D0D;
+    -fx-border-color: #1A1A1A;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 0;
+    -fx-min-height: 40px;
+}
+
+.menu-bar .menu {
+    -fx-padding: 8 12;
+}
+
+.menu-bar .menu:hover {
+    -fx-background-color: #1A1A1A;
+}
+
+.menu-bar .menu .label {
+    -fx-text-fill: #CCCCCC;
+    -fx-font-size: 13px;
+}
+
+.menu-item {
+    -fx-padding: 6 20;
+}
+
+.menu-item:hover {
+    -fx-background-color: #1A1A1A;
+}
+
+.menu-item .label {
+    -fx-text-fill: #CCCCCC;
+}
+
+.context-menu {
+    -fx-background-color: #151515;
+    -fx-border-color: #262626;
+    -fx-border-width: 1;
+    -fx-padding: 6 0;
+}
+
+/* ── Labels ────────────────────────────────── */
+.label {
+    -fx-text-fill: #CCCCCC;
+}
+
+/* ── Text Fields ───────────────────────────── */
+.text-field {
+    -fx-background-color: #1A1A1A;
+    -fx-border-color: #262626;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-text-fill: #FFFFFF;
+    -fx-prompt-text-fill: #555555;
+    -fx-padding: 6 10;
+    -fx-font-size: 13px;
+}
+
+.text-field:focused {
+    -fx-border-color: #F97316;
+    -fx-border-width: 1.5;
+}
+
+/* ── Buttons ───────────────────────────────── */
+.button {
+    -fx-background-color: #1A1A1A;
+    -fx-border-color: #262626;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-text-fill: #CCCCCC;
+    -fx-padding: 6 16;
+    -fx-font-size: 13px;
+    -fx-cursor: hand;
+}
+
+.button:hover {
+    -fx-background-color: #262626;
+    -fx-border-color: #333333;
+}
+
+.button:armed {
+    -fx-background-color: #333333;
+}
+
+.button.primary {
+    -fx-background-color: #F97316;
+    -fx-border-color: #F97316;
+    -fx-text-fill: #FFFFFF;
+}
+
+.button.primary:hover {
+    -fx-background-color: #EA580C;
+}
+
+/* ── Sliders ───────────────────────────────── */
+.slider .track {
+    -fx-background-color: #262626;
+    -fx-background-radius: 2;
+    -fx-pref-height: 4;
+}
+
+.slider .thumb {
+    -fx-background-color: #F97316;
+    -fx-background-radius: 8;
+    -fx-pref-width: 14;
+    -fx-pref-height: 14;
+}
+
+.slider .thumb:hover {
+    -fx-background-color: #EA580C;
+}
+
+/* ── Color Picker ──────────────────────────── */
+.color-picker {
+    -fx-background-color: #1A1A1A;
+    -fx-border-color: #262626;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+}
+
+.color-picker .color-picker-label {
+    -fx-text-fill: #CCCCCC;
+}
+
+/* ── Check Box ─────────────────────────────── */
+.check-box {
+    -fx-text-fill: #CCCCCC;
+}
+
+.check-box .box {
+    -fx-background-color: #1A1A1A;
+    -fx-border-color: #262626;
+    -fx-border-radius: 3;
+    -fx-background-radius: 3;
+}
+
+.check-box:selected .box {
+    -fx-background-color: #F97316;
+    -fx-border-color: #F97316;
+}
+
+.check-box:selected .mark {
+    -fx-background-color: #FFFFFF;
+}
+
+/* ── List View ─────────────────────────────── */
+.list-view {
+    -fx-background-color: #0A0A0A;
+    -fx-border-color: #1A1A1A;
+    -fx-border-width: 1;
+}
+
+.list-cell {
+    -fx-background-color: #0A0A0A;
+    -fx-text-fill: #CCCCCC;
+    -fx-padding: 8 12;
+    -fx-font-size: 13px;
+}
+
+.list-cell:filled:selected {
+    -fx-background-color: #1A1A1A;
+    -fx-text-fill: #FFFFFF;
+}
+
+.list-cell:filled:hover {
+    -fx-background-color: #151515;
+}
+
+/* ── Scroll Bar ────────────────────────────── */
+.scroll-bar {
+    -fx-background-color: transparent;
+    -fx-pref-width: 8;
+}
+
+.scroll-bar .thumb {
+    -fx-background-color: #333333;
+    -fx-background-radius: 4;
+}
+
+.scroll-bar .thumb:hover {
+    -fx-background-color: #444444;
+}
+
+.scroll-bar .increment-button,
+.scroll-bar .decrement-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+/* ── Tab Pane ──────────────────────────────── */
+.tab-pane {
+    -fx-background-color: #0A0A0A;
+    -fx-border-color: #1A1A1A;
+    -fx-border-width: 1;
+}
+
+.tab-pane .tab-header-area {
+    -fx-background-color: #111111;
+    -fx-padding: 0;
+}
+
+.tab-pane .tab-header-background {
+    -fx-background-color: #111111;
+}
+
+.tab {
+    -fx-background-color: #111111;
+    -fx-border-color: #1A1A1A;
+    -fx-border-width: 0 1 0 0;
+    -fx-padding: 8 16;
+}
+
+.tab:selected {
+    -fx-background-color: #0A0A0A;
+    -fx-border-color: #F97316 #1A1A1A #0A0A0A #1A1A1A;
+    -fx-border-width: 2 1 0 1;
+}
+
+.tab .tab-label {
+    -fx-text-fill: #666666;
+    -fx-font-size: 12px;
+}
+
+.tab:selected .tab-label {
+    -fx-text-fill: #FFFFFF;
+}
+
+/* ── Split Pane ────────────────────────────── */
+.split-pane {
+    -fx-background-color: #0A0A0A;
+    -fx-border-color: #1A1A1A;
+}
+
+.split-pane .split-pane-divider {
+    -fx-background-color: #1A1A1A;
+    -fx-pref-width: 1;
+}
+
+/* ── Titled Pane ───────────────────────────── */
+.titled-pane {
+    -fx-background-color: #111111;
+    -fx-border-color: #1A1A1A;
+}
+
+.titled-pane .title {
+    -fx-background-color: #151515;
+}
+
+.titled-pane .content {
+    -fx-background-color: #0A0A0A;
+}
