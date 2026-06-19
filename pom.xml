@@ -6,7 +6,7 @@
 
     <groupId>com.novafx</groupId>
     <artifactId>novafx</artifactId>
-    <version>1.0.3</version>
+    <version>1.0.4</version>
     <packaging>pom</packaging>
 
     <name>NovaFX Studio</name>
@@ -98,12 +98,14 @@
                 <version>${lwjgl.version}</version>
             </dependency>
 
-<!-- Jackson -->
+<!-- Toml -->
             <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-core</artifactId>
-                <version>${jackson.version}</version>
+                <groupId>org.tomlj</groupId>
+                <artifactId>tomlj</artifactId>
+                <version>1.1.1</version>
             </dependency>
+
+            <!-- Jackson (still used by novafx-export) -->
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-databind</artifactId>

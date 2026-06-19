@@ -10,9 +10,10 @@ import com.novafx.function.Parameter;
 import com.novafx.math.FunctionDefinition;
 import com.novafx.math.MathPresets;
 import com.novafx.math.Vector3d;
+import com.novafx.project.compiler.ProjectCompiler;
 import com.novafx.project.DefaultPlatformService;
-import com.novafx.project.JacksonProjectRepository;
-import com.novafx.project.ProjectRepository;
+import com.novafx.project.repository.ProjectRepository;
+import com.novafx.project.repository.ProjectRepositoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,34 +31,36 @@ import java.util.UUID;
  * infrastructure layers.
  * <p>
  * Handles user actions: preset selection, function editing, parameter
- * manipulation, rendering, project save/load, and export.
+ * manipulation, rendering, project save/load/compile, and export.
  */
 public final class MainController {
 
     private static final Logger log = LoggerFactory.getLogger(MainController.class);
 
     private final ProjectRepository projectRepository;
+    private final ProjectCompiler projectCompiler;
     private final PlatformService platformService;
 
     private Project currentProject;
+    private Path currentProjectPath;
     private List<Vector3d> currentPoints;
     private Map<String, Parameter> currentParameters = new LinkedHashMap<>();
 
     private Runnable onPointsChanged;
     private Runnable onParametersChanged;
+    private Runnable onProjectChanged;
 
     /**
      * Constructs the main controller with default infrastructure.
      */
     public MainController() {
         this.platformService = new DefaultPlatformService();
-        this.projectRepository = new JacksonProjectRepository(platformService);
+        this.projectRepository = new ProjectRepositoryImpl();
+        this.projectCompiler = new ProjectCompiler();
     }
 
     /**
      * Registers a callback invoked when the point data changes.
-     *
-     * @param callback a Runnable to execute on point updates
      */
     public void setOnPointsChanged(Runnable callback) {
         this.onPointsChanged = callback;
@@ -65,11 +68,27 @@ public final class MainController {
 
     /**
      * Registers a callback invoked when the parameter set changes.
-     *
-     * @param callback a Runnable to execute on parameter updates
      */
     public void setOnParametersChanged(Runnable callback) {
         this.onParametersChanged = callback;
+    }
+
+    /**
+     * Registers a callback invoked when the project itself changes
+     * (load, new, etc.) — useful for updating the window title.
+     */
+    public void setOnProjectChanged(Runnable callback) {
+        this.onProjectChanged = callback;
+    }
+
+    /** Returns the current project, or null. */
+    public Project getCurrentProject() {
+        return currentProject;
+    }
+
+    /** Returns the current project's file path, or null if unsaved. */
+    public Path getCurrentProjectPath() {
+        return currentProjectPath;
     }
 
     // ---------------------------------------------------------------
@@ -100,8 +119,10 @@ public final class MainController {
                 Instant.now(),
                 Instant.now()
         );
+        currentProjectPath = null;
         refreshParameters();
         resample();
+        fireProjectChanged();
         return def;
     }
 
@@ -111,13 +132,6 @@ public final class MainController {
 
     /**
      * Updates the current function definition and re-samples.
-     *
-     * @param xExpr x(t) expression
-     * @param yExpr y(t) expression
-     * @param zExpr z(t) expression
-     * @param start parameter start
-     * @param end   parameter end
-     * @param step  sampling step
      */
     public void updateFunction(String xExpr, String yExpr, String zExpr,
                                double start, double end, double step) {
@@ -153,41 +167,25 @@ public final class MainController {
 
     /**
      * Saves the current function as a named preset.
-     *
-     * @param name the preset name
      */
     public void saveCurrentAsPreset(String name) {
         if (currentProject == null) return;
-        Project preset = new Project(
-                UUID.randomUUID(),
-                name,
-                "User preset: " + name,
-                currentProject.functionDefinition(),
-                Instant.now(),
-                Instant.now()
-        );
-        projectRepository.save(preset);
-        log.info("Saved preset: {}", name);
+        // For now, presets are managed in-memory via MathPresets.
+        // The old JSON workspace repository has been removed.
+        log.info("Preset '{}' would be saved (feature coming)", name);
     }
 
     // ---------------------------------------------------------------
     // Parameters
     // ---------------------------------------------------------------
 
-    /**
-     * Returns the current set of adjustable parameters.
-     *
-     * @return immutable list of parameters (never null)
-     */
+    /** Returns the current set of adjustable parameters. */
     public List<Parameter> getParameters() {
         return List.copyOf(currentParameters.values());
     }
 
     /**
      * Updates a single parameter value and re-samples.
-     *
-     * @param name  the parameter name
-     * @param value the new value
      */
     public void setParameter(String name, double value) {
         Parameter existing = currentParameters.get(name);
@@ -201,23 +199,6 @@ public final class MainController {
     // Project persistence
     // ---------------------------------------------------------------
 
-    /** Saves the current project. */
-    public void saveProject() {
-        if (currentProject != null) {
-            projectRepository.save(currentProject);
-            log.info("Saved project: {}", currentProject.id());
-        }
-    }
-
-    /** Loads a project by ID. */
-    public void loadProject(UUID id) {
-        projectRepository.findById(id).ifPresent(project -> {
-            this.currentProject = project;
-            refreshParameters();
-            resample();
-        });
-    }
-
     /** Creates a new empty project. */
     public void newProject() {
         FunctionDefinition def = new FunctionDefinition("t", "t", "0", 0, 10, 0.5);
@@ -225,25 +206,84 @@ public final class MainController {
                 UUID.randomUUID(), "Untitled", "",
                 def, Instant.now(), Instant.now()
         );
+        this.currentProjectPath = null;
         refreshParameters();
         resample();
+        fireProjectChanged();
+    }
+
+    /**
+     * Loads a project from a .nfx file path.
+     *
+     * @param path the path to the .nfx file
+     */
+    public void loadProject(Path path) {
+        Project loaded = projectRepository.load(path);
+        this.currentProject = loaded;
+        this.currentProjectPath = path;
+        refreshParameters();
+        resample();
+        fireProjectChanged();
+        log.info("Loaded project from {}", path);
+    }
+
+    /**
+     * Saves the current project to its current path.
+     *
+     * @return true if saved, false if no path is set (caller should prompt for Save As)
+     */
+    public boolean saveProject() {
+        if (currentProject == null) return false;
+        if (currentProjectPath == null) return false;
+        projectRepository.save(currentProject, currentProjectPath);
+        log.info("Saved project to {}", currentProjectPath);
+        return true;
+    }
+
+    /**
+     * Saves the current project to a specified path.
+     *
+     * @param path the target .nfx path
+     */
+    public void saveProjectAs(Path path) {
+        if (currentProject == null) return;
+        this.currentProjectPath = path;
+        projectRepository.save(currentProject, path);
+        fireProjectChanged();
+        log.info("Saved project to {}", path);
+    }
+
+    /**
+     * Compiles the current project to a .nfxc file.
+     *
+     * @param output the target .nfxc path
+     */
+    public void compileProject(Path output) {
+        if (currentProject == null) return;
+        // Convert domain Project to file-format Project for compilation
+        var fileProject = new com.novafx.project.model.Project(
+                com.novafx.project.model.Project.CURRENT_VERSION,
+                new com.novafx.project.model.Meta(currentProject.name(), ""),
+                currentProject.functionDefinition(),
+                com.novafx.project.model.ParticleSettings.defaults(),
+                com.novafx.project.model.RenderSettings.defaults()
+        );
+        projectCompiler.compile(fileProject, output);
+        log.info("Compiled project to {}", output);
     }
 
     // ---------------------------------------------------------------
     // Export
     // ---------------------------------------------------------------
 
-    /** Exports the current project as CSV. */
     public void exportCsv(Path output) {
         exportWith(new CsvExporter(), output);
     }
 
-    /** Exports the current project as JSON. */
     public void exportJson(Path output) {
         exportWith(new JsonExporter(), output);
     }
 
-    /** Exports the current project as Minecraft MCFunction. */
     public void exportMcFunction(Path output) {
         exportWith(new McFunctionExporter(), output);
     }
@@ -310,5 +350,11 @@ public final class MainController {
             vars.put(p.name(), p.value());
         }
         return vars;
+    }
+
+    private void fireProjectChanged() {
+        if (onProjectChanged != null) {
+            onProjectChanged.run();
+        }
     }
 }

@@ -6,11 +6,11 @@
     <parent>
         <groupId>com.novafx</groupId>
         <artifactId>novafx</artifactId>
-        <version>1.0.3</version>
+        <version>1.0.4</version>
     </parent>
     <artifactId>novafx-project</artifactId>
     <name>NovaFX Project</name>
-    <description>Project persistence: save/load .nfx files via Jackson</description>
+    <description>NovaFX file system: .nfx (TOML) and .nfxc (binary) format handlers</description>
 
     <dependencies>
         <dependency>
@@ -18,17 +18,12 @@
             <artifactId>novafx-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-core</artifactId>
+            <groupId>com.novafx</groupId>
+            <artifactId>novafx-math</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.datatype</groupId>
-            <artifactId>jackson-datatype-jsr310</artifactId>
-            <version>${jackson.version}</version>
+            <groupId>org.tomlj</groupId>
+            <artifactId>tomlj</artifactId>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
